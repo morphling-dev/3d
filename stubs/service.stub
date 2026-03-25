@@ -1,0 +1,28 @@
+<?php
+
+namespace {{ namespace }};
+
+readonly class {{ class }}
+{
+    /**
+     * Service constructor.
+     *
+     * Inject repositories, external clients, or other domain services as needed.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        // Initialize dependencies here
+    }
+
+    /**
+     * Execute the core business logic for this service.
+     *
+     * @return void
+     */
+    public function execute(): void
+    {
+        // Implement core business logic here
+    }
+}

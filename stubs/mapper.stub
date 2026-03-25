@@ -1,0 +1,38 @@
+<?php
+
+namespace {{ namespace }};
+
+class {{ class }}
+{
+    /**
+     * Map an Infrastructure Model object to a Domain Entity object.
+     *
+     * @param  object  $raw  The raw object from the infrastructure or persistence layer.
+     * @return object  The mapped domain entity object.
+     */
+    public static function toDomain(object $raw): object
+    {
+        // TODO: Replace with actual mapping logic based on domain entity structure.
+        $entity = new \stdClass();
+        // Example mapping:
+        // $entity->id = $raw->id ?? null;
+        // $entity->name = $raw->name ?? null;
+        return $entity;
+    }
+
+    /**
+     * Map a Domain Entity object to an array suitable for Eloquent persistence.
+     *
+     * @param  object  $entity  The domain entity object to be persisted.
+     * @return array  The mapped array for Eloquent model.
+     */
+    public static function toPersistence(object $entity): array
+    {
+        // TODO: Replace with actual mapping logic based on entity properties and persistence requirements.
+        $data = [];
+        // Example mapping:
+        // $data['id'] = $entity->id ?? null;
+        // $data['name'] = $entity->name ?? null;
+        return $data;
+    }
+}

@@ -1,0 +1,9 @@
+/vendor/
+composer.lock
+.env
+.phpunit.result.cache
+/tests/temp/
+.idea/
+.vscode/
+.cursor/
+*.bak

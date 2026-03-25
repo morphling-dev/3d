@@ -1,0 +1,32 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class {{ class }} extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     *
+     * @return bool Whether the user is authorized for this request.
+     */
+    public function authorize(): bool
+    {
+        // By default, allow all requests. Override this method if specific logic is needed.
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array Validation rules for the request.
+     */
+    public function rules(): array
+    {
+        return [
+            // Define validation rules here, for example:
+            // 'field_name' => 'required|string|max:255',
+        ];
+    }
+}

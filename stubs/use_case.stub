@@ -1,0 +1,40 @@
+<?php
+
+namespace {{ namespace }};
+
+use Modules\Shared\Application\UseCases\BaseUseCase;
+use {{ root_namespace }}\Domain\Repositories\{{ module }}RepositoryInterface;
+
+class {{ class }} extends BaseUseCase
+{
+    /**
+     * {{ class }} constructor.
+     *
+     * @param {{ module }}RepositoryInterface $repository
+     */
+    public function __construct(
+        protected {{ module }}RepositoryInterface $repository
+    ) {
+        // Dependency injected via interface for Decoupling
+    }
+
+    /**
+     * Execute the use case logic.
+     *
+     * @param  mixed|null  $dto  Data transfer object to execute the use case.
+     * @return array  Response indicating the status and module.
+     */
+    public function execute(mixed $dto = null): array
+    {
+        // Business Logic starts here
+        
+        return [
+            'is_success' => true,
+            'message'    => 'Execution successful for {{ module }}',
+            'data'       => [
+                'module' => '{{ module }}',
+                'action' => '{{ class }}',
+            ],
+        ];
+    }
+}

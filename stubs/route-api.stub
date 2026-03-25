@@ -1,0 +1,14 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use Modules\{{ module }}\Delivery\Controllers\{{ module }}Controller;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes for {{ module }}
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('{{ module_snake }}')->group(function () {
+    Route::get('/', [{{ module }}Controller::class, 'index']);
+});

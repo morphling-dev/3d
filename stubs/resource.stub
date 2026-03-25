@@ -1,0 +1,37 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Support\ServiceProvider;
+use {{ root_namespace }}\Domain\Repositories\{{ module }}RepositoryInterface;
+use {{ root_namespace }}\Infrastructure\Repositories\Eloquent{{ module }}Repository;
+use {{ root_namespace }}\Infrastructure\Models\{{ module }}Model;
+use {{ root_namespace }}\Infrastructure\Database\Observers\{{ module }}Observer;
+
+class {{ class }} extends ServiceProvider
+{
+    /**
+     * Register any module services.
+     */
+    public function register(): void
+    {
+        // Bind Repository Interface to Eloquent Implementation
+        $this->app->bind(
+            {{ module }}RepositoryInterface::class,
+            Eloquent{{ module }}Repository::class
+        );
+    }
+
+    /**
+     * Bootstrap any module services.
+     */
+    public function boot(): void
+    {
+        // Register Observer for the Model
+        if (class_exists({{ module }}Observer::class)) {
+            {{ module }}Model::observe({{ module }}Observer::class);
+        }
+        
+        // Load additional module resources if needed
+    }
+}

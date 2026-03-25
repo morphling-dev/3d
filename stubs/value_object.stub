@@ -1,0 +1,81 @@
+<?php
+
+namespace {{ namespace }};
+
+use InvalidArgumentException;
+
+readonly class {{ class }}
+{
+    /**
+     * The actual value for status.
+     *
+     * @var string
+     */
+    public string $value;
+
+    /**
+     * Permitted status values.
+     */
+    private const ALLOWED_VALUES = [
+        'active',
+        'inactive',
+        'pending',
+        'archived',
+    ];
+
+    /**
+     * Constructor for the Status value object.
+     *
+     * @param  string  $value  The status value. Must be one of self::ALLOWED_VALUES.
+     * @throws InvalidArgumentException  If value is invalid.
+     */
+    public function __construct(string $value)
+    {
+        $this->validate($value);
+        $this->value = $value;
+    }
+
+    /**
+     * Validates the given status value.
+     *
+     * @param  string  $value  The status value to validate.
+     * @throws InvalidArgumentException  If value is empty or not allowed.
+     * @return void
+     */
+    private function validate(string $value): void
+    {
+        if (empty($value)) {
+            throw new InvalidArgumentException('Status cannot be empty.');
+        }
+        if (!in_array($value, self::ALLOWED_VALUES, true)) {
+            throw new InvalidArgumentException(
+                sprintf(
+                    'Invalid status value "%s". Allowed values: %s.',
+                    $value,
+                    implode(', ', self::ALLOWED_VALUES)
+                )
+            );
+        }
+    }
+
+    /**
+     * Determines if this Status is equal to another Status.
+     *
+     * @param  Status  $other  The other Status value object.
+     * @return bool  True if equal, otherwise false.
+     */
+    public function equals(Status $other): bool
+    {
+        return $this->value === $other->value;
+    }
+
+    /**
+     * Converts the status to string.
+     *
+     * @return string  The string representation of the status.
+     */
+    public function __toString(): string
+    {
+        return $this->value;
+    }
+}

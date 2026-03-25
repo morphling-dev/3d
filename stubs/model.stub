@@ -1,0 +1,26 @@
+<?php
+
+namespace {{ namespace }};
+
+use Modules\Shared\Infrastructure\Models\BaseModel;
+
+class {{ class }} extends BaseModel
+{
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        // Add fillable attributes here, e.g. 'name',
+    ];
+
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+        // e.g. 'is_active' => 'boolean',
+    ];
+}

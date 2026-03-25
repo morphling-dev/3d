@@ -1,0 +1,20 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\SerializesModels;
+use {{ root_namespace }}\Domain\Entities\{{ module }}Entity;
+
+class {{ class }}
+{
+    use Dispatchable, SerializesModels;
+
+    /**
+     * Create a new event instance.
+     */
+    public function __construct(
+        public {{ module }}Entity $entity,
+        public array $metadata = []
+    ) {}
+}

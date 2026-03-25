@@ -1,0 +1,16 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use Modules\{{ module }}\Delivery\Controllers\{{ module }}Controller;
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes for {{ module }}
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('web')->group(function () {
+    Route::prefix('{{ module_snake }}')->group(function () {
+        Route::get('/', [{{ module }}Controller::class, 'index']);
+    });
+});

@@ -1,0 +1,37 @@
+<?php
+
+namespace {{ namespace }};
+
+readonly class {{ class }}
+{
+    /**
+     * The validated data.
+     *
+     * @var array
+     */
+    public array $data;
+
+    /**
+     * Create a new {{ class }} instance.
+     *
+     * @param  array  $data  The validated data.
+     * @return void
+     */
+    public function __construct(array $data)
+    {
+        $this->data = $data;
+    }
+
+    /**
+     * Create a new instance from a request.
+     *
+     * @param  mixed  $request  The request containing validated data.
+     * @return static  An instance of the DTO.
+     */
+    public static function fromRequest(mixed $request): static
+    {
+        return new static(
+            $request->validated(),
+        );
+    }
+}

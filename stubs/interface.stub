@@ -1,0 +1,81 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ root_namespace }}\Domain\Entities\{{ module }}Entity;
+use Illuminate\Support\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
+
+interface {{ class }}
+{
+    /**
+     * Find an entity by its identifier.
+     *
+     * @param int|string $id
+     * @return {{ module }}Entity|null
+     */
+    public function findById(int|string $id): ?{{ module }}Entity;
+
+    /**
+     * Get all entities as an array.
+     *
+     * @return array
+     */
+    public function all(): array;
+
+    /**
+     * Get all entities as a collection.
+     *
+     * @return Collection<int, {{ module }}Entity>
+     */
+    public function allAsCollection(): Collection;
+
+    /**
+     * Find entities by specific conditions.
+     *
+     * @param array $conditions
+     * @return Collection<int, {{ module }}Entity>
+     */
+    public function findBy(array $conditions): Collection;
+
+    /**
+     * Find the first entity by specific conditions.
+     *
+     * @param array $conditions
+     * @return {{ module }}Entity|null
+     */
+    public function findOneBy(array $conditions): ?{{ module }}Entity;
+
+    /**
+     * Get paginated entities.
+     *
+     * @param int $perPage
+     * @return LengthAwarePaginator
+     */
+    public function paginate(int $perPage = 15): LengthAwarePaginator;
+
+    /**
+     * Save a new entity.
+     *
+     * @param {{ module }}Entity $entity
+     * @return bool
+     */
+    public function save({{ module }}Entity $entity): bool;
+
+    /**
+     * Update an entity by its identifier.
+     *
+     * @param int|string $id
+     * @param array $data
+     * @return bool
+     */
+    public function update(int|string $id, array $data): bool;
+
+    /**
+     * Delete an entity by its identifier.
+     *
+     * @param int|string $id
+     * @return bool
+     */
+    public function delete(int|string $id): bool;
+}
