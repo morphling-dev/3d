@@ -1,6 +1,6 @@
 <?php
 
-namespace Morphling\ThreeD\Tests;
+namespace Morphling\ThreeD\Tests\Support;
 
 use Morphling\ThreeD\ThreeDServiceProvider;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;

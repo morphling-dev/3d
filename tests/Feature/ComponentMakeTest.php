@@ -1,9 +1,11 @@
 <?php
 
-use Morphling\ThreeD\Tests\TestCase;
-
-uses(TestCase::class);
-
+/**
+ * Helps static analysis understand Pest's `$this` binding.
+ *
+ * @var \Morphling\ThreeD\Tests\Support\TestCase $this
+ */
+ 
 beforeEach(function () {
     $this->cleanModules();
 });
@@ -68,3 +70,4 @@ it('module component generators create valid files with correct namespaces', fun
         ],
     ],
 ]);
+

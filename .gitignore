@@ -2,6 +2,8 @@
 composer.lock
 .env
 .phpunit.result.cache
+.phpunit.cache/
+.pest_tracker.cache
 /tests/temp/
 .idea/
 .vscode/

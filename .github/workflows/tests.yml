@@ -12,11 +12,17 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: mbstring, xml, ctype, iconv, sqlite3
+          extensions: mbstring, dom, fileinfo, filter, gd, hash, iconv, json, libxml, mbstring, openssl, pcre, pdo, session, simplexml, sqlite, tokenizer, xml, xmlreader, xmlwriter, zip
+          coverage: none
+
+      - name: Copy .env
+        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
 
       - name: Install Dependencies
-        run: composer install --no-progress
+        run: composer install --no-interaction --no-progress
+
+      - name: Create Cache Directory
+        run: mkdir -p .phpunit.cache
 
       - name: Run Tests
-        run: composer test
-
+        run: vendor/bin/pest --ci
