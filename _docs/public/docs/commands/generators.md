@@ -4,7 +4,7 @@ Generator commands create code inside `modules/{ModuleName}/...` using the stub 
 
 ## Reference Table
 
-> `module` always maps to the module folder name (ex: `Transaction` → `modules/Transaction/`).
+> `module` always maps to the module folder name (ex: `Transaction` -> `modules/Transaction/`).
 
 | Command | Signature | Layer | Output |
 |---|---|---|---|
@@ -14,7 +14,7 @@ Generator commands create code inside `modules/{ModuleName}/...` using the stub 
 | `module:make-entity` | `module:make-entity {name} {module}` | Domain | `Domain/Entities/{name}.php` |
 | `module:make-vo` | `module:make-vo {name} {module}` | Domain | `Domain/ValueObjects/{name}.php` |
 | `module:make-enum` | `module:make-enum {name} {module}` | Domain | `Domain/Enums/{name}.php` |
-| `module:make-interface` | `module:make-interface {name} {module}` | Domain | `Domain/Interfaces/{name}.php` |
+| `module:make-interface` | `module:make-interface {name} {module}` | Domain | `Domain/Repositories/{name}.php` |
 | `module:make-service` | `module:make-service {name} {module}` | Domain | `Domain/Services/{name}.php` |
 | `module:make-model` | `module:make-model {name} {module}` | Infrastructure | `Infrastructure/Models/{name}.php` |
 | `module:make-repo` | `module:make-repo {name} {module}` | Infrastructure | `Infrastructure/Repositories/{name}.php` |
@@ -56,6 +56,33 @@ readonly class {{ class }}
     }
 }
 ```
+
+## Why this matters
+
+Generators ensure every layer is created with:
+
+- Morphling-consistent naming (Entity, DTO, UseCase, Repository)
+- correct module-scoped namespaces and folders
+- stubs that implement the expected layer boundaries
+
+This is what makes the request path predictable and what enables deep-linking and auto-discovery to work without extra configuration.
+
+## How this connects to the other layers
+
+- Use `module:make-dto` and `module:make-request` together so controllers can build DTOs from validated input.
+- Use `module:make-usecase` to orchestrate Entities via repository interfaces.
+- Use `module:make-repo` to implement the Domain repository interface with Eloquent persistence.
+- Use `module:make-controller` and `module:make-route` to expose the UseCase via Delivery.
+
+## Concrete naming example
+
+If your module is `Transaction`:
+
+- Entity: `TransactionEntity`
+- DTO: `TransactionDto`
+- UseCase: `GetTransactionListUseCase`
+- Repository interface: `TransactionRepositoryInterface` (Domain/Repositories)
+- Repository implementation: `EloquentTransactionRepository` (Infrastructure/Repositories)
 
 ## Typical Workflow
 

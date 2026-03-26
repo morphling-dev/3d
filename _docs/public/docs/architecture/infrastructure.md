@@ -44,6 +44,56 @@ protected function registerRoutes(): void
 }
 ```
 
+## Why this matters
+
+Infrastructure is where technical concerns live:
+
+- persistence and Eloquent integration
+- repository implementations
+- module service provider bootstrapping (routes + views)
+- mappers and integration logic your module needs
+
+When Infrastructure is isolated, you can change persistence or mapping without changing Domain rules or UseCase orchestration.
+
+## How this connects to other layers
+
+- Domain defines repository interfaces and Entities.
+- Application depends on repository interfaces and never directly on Eloquent.
+- Delivery calls UseCases and returns results to the client.
+- Infrastructure implements the Domain contracts and binds them in the module’s Service Provider.
+
+## Example: Eloquent Repository (Infrastructure)
+
+Morphling 3D generates an Eloquent repository that implements the Domain repository interface. Example shape (excerpt):
+
+```php
+class EloquentTransactionRepository implements TransactionRepositoryInterface
+{
+    public function __construct(protected TransactionModel $model) {}
+
+    public function findById(int|string $id): ?TransactionEntity
+    {
+        $record = $this->query()->find($id);
+        return $record ? $record->toDomain() : null;
+    }
+
+    public function save(TransactionEntity $entity): bool
+    {
+        $model = new TransactionModel($entity->toArray());
+        return $model->save();
+    }
+}
+```
+
+## Example: Mapper Responsibilities (when used)
+
+If you use a `{{ module }}Mapper`, keep conversions inside `Infrastructure/Mappers/`:
+
+- `toDomain(object $raw)`: persistence object -> Domain Entity
+- `toPersistence(object $entity): array`: Domain Entity -> persistence array
+
+This prevents database/ORM details from leaking into Domain.
+
 ## Navigation
 
 - [Domain Responsibilities](#/architecture/domain)

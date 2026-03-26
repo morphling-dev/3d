@@ -14,11 +14,11 @@ Stop writing repetitive boilerplate. Focus on your business logic and let Morphl
 
 Not just a folder generator, Morphling 3D brings high architectural standards into your daily workflow:
 
-* **True Separation of Concerns:** Strictly separates Domain (Core Logic), Application (Orchestration), Infrastructure (Technical), and Delivery (Interface) layers.
-* **Zero-Config Discovery:** Service Providers, Routes, and Migrations inside your modules are discovered automatically. No more manual registration in `config/app.php`.
-* **Data Integrity First:** Automatically generates **DTOs** and **Mappers** to ensure data transferred between layers remains valid and controlled.
-* **Great Developer Experience (DX):** Smart scripts to open newly generated files directly in your favorite editor (**Cursor, VSCode, or PHPStorm**) via links from the UI landing page.
-* **Shared Kernel Ready:** Includes reusable components like `ApiResponse`, `BaseUseCase`, `BaseModel`, and `HttpStatus` constants.
+- **True Separation of Concerns:** Strictly separates Domain (Core Logic), Application (Orchestration), Infrastructure (Technical), and Delivery (Interface) layers.
+- **Zero-Config Discovery:** Service Providers, Routes, and Migrations inside your modules are discovered automatically. No more manual registration in `config/app.php`.
+- **Data Integrity First:** Automatically generates **DTOs** and **Mappers** to ensure data transferred between layers remains valid and controlled.
+- **Great Developer Experience (DX):** Smart scripts to open newly generated files directly in your favorite editor (**Cursor, VSCode, or PHPStorm**) via links from the UI landing page.
+- **Shared Kernel Ready:** Includes reusable components like `ApiResponse`, `BaseUseCase`, `BaseModel`, and `HttpStatus` constants.
 
 ---
 
@@ -28,7 +28,7 @@ Not just a folder generator, Morphling 3D brings high architectural standards in
 
 ```bash
 composer require morphling-dev/3d
-````
+```
 
 2. Run the install command to prepare the `modules/` folder and Shared Kernel:
 
@@ -49,7 +49,15 @@ php artisan 3d:install
 
 Then run `composer dump-autoload`.
 
------
+## Quick Start (Docs)
+
+Start with: [Quick Start](docs/quick-start.md)
+
+For a full end-to-end walkthrough: [First Module Tutorial](docs/first-module.md)
+
+For strict boundaries: [Architectural Rules](docs/rules.md)
+
+---
 
 ## 🏛️ Module Architecture
 
@@ -64,7 +72,7 @@ modules/
     └── Delivery/           # Controllers, Routes, Requests, Resources, Views
 ```
 
------
+---
 
 ## 🛠️ Usage (Artisan Commands)
 
@@ -86,14 +94,14 @@ php artisan module:list
 
 ### 3. Layer-Specific Generators
 
-| Layer           | Artisan Command                                                          |
-| :-------------- | :----------------------------------------------------------------------: |
-| **Domain**      | `module:make-entity`, `module:make-vo`, `module:make-enum`, `module:make-service` |
-| **Application** | `module:make-usecase`, `module:make-dto`                                |
-| **Infrastructure** | `module:make-model`, `module:make-repo`, `module:make-mapper`, `module:make-migration` |
-| **Delivery**    | `module:make-controller`, `module:make-request`, `module:make-resource`, `module:make-view` |
+| Layer              |                                       Artisan Command                                       |
+| :----------------- | :-----------------------------------------------------------------------------------------: |
+| **Domain**         |      `module:make-entity`, `module:make-vo`, `module:make-enum`, `module:make-service`      |
+| **Application**    |                          `module:make-usecase`, `module:make-dto`                           |
+| **Infrastructure** |   `module:make-model`, `module:make-repo`, `module:make-mapper`, `module:make-migration`    |
+| **Delivery**       | `module:make-controller`, `module:make-request`, `module:make-resource`, `module:make-view` |
 
------
+---
 
 ## ⚙️ Configuration
 
@@ -114,15 +122,15 @@ return [
 ];
 ```
 
------
+---
 
 ## 🔗 Links & Resources
 
-  * **GitHub Repository:** [https://github.com/morphling-dev/3d](https://github.com/morphling-dev/3d)
-  * **Documentation:** [https://docs.morphling.dev/3d](https://docs.morphling.dev/3d)
-  * **Issue Tracker:** [Report a Bug](https://github.com/morphling-dev/3d/issues)
+- **GitHub Repository:** [https://github.com/morphling-dev/3d](https://github.com/morphling-dev/3d)
+- **Documentation:** [https://docs.morphling.dev/3d](https://docs.morphling.dev/3d)
+- **Issue Tracker:** [Report a Bug](https://github.com/morphling-dev/3d/issues)
 
------
+---
 
 ## 🤝 Contribution
 
@@ -132,6 +140,6 @@ We welcome contributions! If you want to add new stubs or generator features, pl
 
 Licensed under the **MIT** license. Use responsibly to build great applications.
 
------
+---
 
 Created by **[Indra Ranuh](https://github.com/indraranuh-dev)** & the **[Morphling Coding](https://github.com/morphling-dev)**

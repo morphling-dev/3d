@@ -1,4 +1,14 @@
+## Why this matters
+
+This sidebar definition drives the docs navigation, so new pages remain discoverable alongside the existing layer and command documentation (Domain, Application, Infrastructure, Delivery).
+
+Navigation entries for the Morphling 3D documentation sidebar.
+
 * [Home](README.md)
+* [Quick Start](quick-start.md)
+* [First Module Tutorial](first-module.md)
+* [Request Lifecycle](request-lifecycle.md)
+* [Architectural Rules](rules.md)
 * [Installation](installation.md)
 
 * **Architecture**

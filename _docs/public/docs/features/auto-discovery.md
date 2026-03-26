@@ -47,3 +47,28 @@ protected function registerViews(): void
 - Route loading is conditional: only loads `Delivery/Routes/web.php` and/or `Delivery/Routes/api.php` if they exist.
 - View loading uses a namespaced alias: `{{ module_snake }}::index`.
 
+## Why this matters
+
+Auto-discovery removes the most error-prone part of modular Laravel projects:
+
+- manual provider registration
+- route file wiring
+- view namespace registration
+
+By standardizing module wiring, you reduce configuration drift and keep modules deployable and composable.
+
+## How to validate discovery in your project
+
+Run:
+
+```bash
+php artisan module:list
+php artisan route:list
+```
+
+`module:list` confirms provider registration and route presence. `route:list` confirms the Delivery routes are actually registered.
+
+## How this connects to the request lifecycle
+
+Discovery ensures that Delivery routes/controllers become reachable at runtime. Without it, the rest of the pipeline (Controller -> UseCase -> Domain -> Repository -> Response) cannot be exercised.
+

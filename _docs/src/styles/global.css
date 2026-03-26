@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono&display=swap");
+
+  body {
+    @apply antialiased bg-[#050505] text-neutral-500 selection:bg-emerald-500/30;
+    font-family: "Inter", sans-serif;
+  }
+
+  [x-cloak] {
+    display: none !important;
+  }
+}
+
+@layer components {
+  /* Typography Documentation (Prose) */
+  .prose {
+    @apply max-w-none;
+  }
+
+  .prose h1,
+  .prose h2,
+  .prose h3 {
+    @apply text-white font-light tracking-tight mt-10 mb-6;
+  }
+
+  .prose h1 {
+    @apply text-4xl pb-4 border-b border-neutral-900;
+  }
+
+  .prose p {
+    @apply leading-relaxed mb-6 text-neutral-400;
+  }
+
+  /* Inline Code */
+  .prose :not(pre) > code {
+    @apply font-mono bg-neutral-900/50 text-neutral-300 px-1.5 py-0.5 rounded border border-neutral-800 text-[0.9em];
+    font-family: "JetBrains Mono", monospace;
+  }
+
+  /* Code Block Container */
+  .prose pre {
+    @apply relative bg-[#0a0a0a] !important border border-neutral-900 rounded-xl p-6 pt-14 my-8 shadow-2xl overflow-x-auto text-[13px];
+  }
+
+  /* Mac window controls */
+  .code-header {
+    @apply absolute top-4 left-5 flex gap-1.5 z-10;
+  }
+
+  .dot {
+    @apply w-2.5 h-2.5 rounded-full inline-block;
+  }
+  .dot.red {
+    @apply bg-[#ef4444] shadow-[0_0_8px_#ef444444];
+  }
+  .dot.yellow {
+    @apply bg-[#facc15] shadow-[0_0_8px_#facc1544];
+  }
+  .dot.green {
+    @apply bg-[#22c55e] shadow-[0_0_8px_#22c55e44];
+  }
+
+  /* Copy Button */
+  .copy-btn {
+    @apply absolute top-3 right-4 bg-neutral-900 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg opacity-40 hover:opacity-100 hover:bg-emerald-600 transition-all duration-200 z-20 cursor-pointer;
+  }
+
+  /* Sidebar Active State */
+  .nav-active {
+    @apply text-white border-l border-emerald-500 bg-gradient-to-r from-emerald-500/10 to-transparent !important;
+  }
+
+  /* Table Style - Enterprise Ready */
+  .prose table {
+    @apply w-full my-8 border-collapse text-sm text-left border border-neutral-900 rounded-xl overflow-hidden;
+  }
+
+  .prose thead {
+    @apply bg-emerald-500/5 border-b border-neutral-900;
+  }
+
+  .prose th {
+    @apply text-white font-semibold p-4 uppercase tracking-wider text-[11px];
+  }
+
+  .prose td {
+    @apply p-4 border-b border-neutral-900 text-neutral-500 align-top whitespace-nowrap;
+  }
+
+  .prose tr:hover td {
+    @apply bg-white/[0.02] text-neutral-300;
+  }
+}

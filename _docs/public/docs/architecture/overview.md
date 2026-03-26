@@ -42,6 +42,21 @@ $this->call('module:make-model', ['name' => "{$module}Model", 'module' => $modul
 $this->call('module:make-repo', ['name' => "Eloquent{$module}Repository", 'module' => $module]);
 ```
 
+## Why this matters
+
+The architecture is enforced by the generator workflow:
+
+- `module:new` creates artifacts across all layers in a known location.
+- Auto-discovery registers module service providers so Delivery routes/views become reachable.
+- The UseCase + DTO pattern keeps request handling and orchestration separate from Domain rules.
+
+## How this connects to Morphling 3D features
+
+- **Auto-Discovery**: module providers register routes and view namespaces for each module.
+- **Deep-Linking**: generated `Delivery/Views/index.blade.php` provides editor links to the relevant module code.
+
+For the runtime execution path, see [Request Lifecycle](../request-lifecycle.md).
+
 ## Navigation
 
 - [Domain Responsibilities](#/architecture/domain)

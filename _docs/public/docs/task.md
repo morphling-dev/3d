@@ -6,6 +6,16 @@ Anda adalah seorang _Technical Writer_ sekaligus _Software Architect_. Tugas uta
 
 ---
 
+## Why this matters
+
+Morphling 3D documentation is only useful if it stays aligned with the actual generator workflow, naming conventions, 4-layer boundaries, and the request lifecycle at runtime.
+
+## Connection to Morphling 3D layers
+
+Each documentation page should explicitly describe how it maps to the execution path:
+
+Delivery (HTTP/UI) -> Application (UseCases, DTOs) -> Domain (business rules, Entities) -> Infrastructure (repositories, integrations).
+
 ## Langkah-langkah Eksekusi
 
 ### 1. Analisis Kode Proyek
