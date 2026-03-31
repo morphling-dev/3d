@@ -1,14 +1,15 @@
 # Management Commands
 
-These commands manage the lifecycle of your modular ecosystem. While the generators build the files, the **Management Commands** handle the "wiring"—ensuring Laravel recognizes your modules, registers their routes, and cleans up the environment.
+These commands manage the lifecycle of your modular ecosystem in Morphling 3D. While generators create code and scaffolds, **Management Commands** handle orchestration: making sure Laravel recognizes your modules, registers their Service Providers and routes, and keeps the environment in sync.
 
 ---
 
 ## Executive Summary
-Morphling 3D uses a **Service Discovery** pattern. Instead of manually adding Service Providers to `config/app.php`, you use these commands to sync your physical `modules/` folder with Laravel's internal registry.
+
+Morphling 3D leverages a **Service Discovery** mechanism. Rather than manually adding every module Service Provider to `config/app.php`, the system uses management commands to reflect the contents of your `modules/` directory into Laravel's bootstrapping process.
 
 > [!IMPORTANT]
-> **Key Rule:** Always run `php artisan module:discover` after creating a new module or deleting one manually to refresh the application map.
+> **Key Rule:** Always run `php artisan 3d:discover` after adding, renaming, or deleting a module (especially if done manually) to refresh Laravel’s internal providers map.
 
 ---
 
@@ -18,52 +19,50 @@ Morphling 3D uses a **Service Discovery** pattern. Instead of manually adding Se
 ```bash
 php artisan 3d:install
 ```
-**Purpose:** The "Big Bang" command. It creates the `modules/` directory, scaffolds the `Shared` kernel, and publishes the core configuration. Run this once per project.
+**Purpose:** Bootstrap your Morphling 3D environment. This command creates the `modules/` directory, scaffolds the `Shared` kernel, and publishes the core config (`config/3d.php`). Run it once per new project.
 
 ### 2. The Auditor
 ```bash
-php artisan module:list
+php artisan 3d:list
 ```
-**Purpose:** Provides a high-level health check. It scans your `modules/` folder and reports:
-* **Registration Status:** Is the Service Provider active?
-* **Routes:** Does it have `api.php` or `web.php` defined?
-* **Views:** Is the view namespace registered?
+**Purpose:** Overview of all available modules. This command inspects the `modules/` directory and displays:
+* **Registration Status:** Is the Service Provider recognized?
+* **Routes:** Presence of `api.php` or `web.php` routes.
+* **Views:** Whether a view namespace is registered.
 
 ### 3. The Synchronizer
 ```bash
-php artisan module:discover
+php artisan 3d:discover
 ```
-**Purpose:** The most used management command. It automatically detects all `*ServiceProvider.php` files within your modules and injects them into `bootstrap/providers.php` (for Laravel 11+) or the internal cache. 
-
-
+**Purpose:** Keeps Laravel in sync with your `modules/` directory. It scans for all `*ServiceProvider.php` files inside modules and updates Laravel’s service provider registry (e.g., in `bootstrap/providers.php` for Laravel 11+ or the relevant cache for earlier versions).
 
 ### 4. The Janitor
 ```bash
-php artisan module:delete {name}
+php artisan 3d:delete {ModuleName}
 ```
 **Purpose:** Safely removes a module.
-* **Cleanup:** It deletes the physical folder and automatically unregisters the Service Provider so your app doesn't crash looking for missing classes.
-* **Safety:** It will refuse to delete the `Shared` module to prevent accidental architectural collapse.
+* **Cleanup:** Deletes the module’s folder and unregisters its Service Provider.
+* **Safety:** Will not delete the foundational `Shared` module, preventing accidental system instability.
 
 ---
 
 ## Management Workflow: The "Safe Sync"
 
-Whenever you move your project to a new environment (e.g., CI/CD or a teammate's machine), follow this sequence:
+Whenever you bring your project onto a new machine or after significant module changes, use this sequence:
 
-1. `composer install` (Installs the engine)
-2. `php artisan module:discover` (Wires the modules)
-3. `php artisan route:list` (Verifies the endpoints are live)
+1. `composer install` (Installs project dependencies)
+2. `php artisan 3d:discover` (Synchronizes module registration)
+3. `php artisan route:list` (Sanity-check the endpoints are present)
 
 ---
 
 ## Troubleshooting
 
-### "My module is in the folder but doesn't show in `module:list`"
-**Solution:** Ensure the folder name matches the PSR-4 namespace in `composer.json`. If your folder is `Transaction`, the class inside should be `Modules\Transaction\...`. Run `composer dump-autoload` if you changed folder names manually.
+### "A module exists physically but isn't in `3d:list`"
+**Solution:** Verify the folder name and its PSR-4 namespace match your `composer.json` autoload information. For example, a module in `Transaction` should contain classes like `Modules\Transaction\...`. Run `composer dump-autoload` if you rename modules.
 
-### "I deleted a folder manually and now the app is broken."
-**Solution:** Laravel is likely trying to load a Service Provider that no longer exists. Run `php artisan module:discover` to force a re-sync of the provider list.
+### "I manually deleted a module and now Laravel errors at boot."
+**Solution:** Laravel is trying to load a Service Provider that doesn’t exist anymore. Run `php artisan 3d:discover` to refresh the provider registry and clear dead links.
 
-### "Can I disable a module without deleting it?"
-**Solution:** Currently, Morphling 3D treats any folder in `modules/` as an active candidate. To disable one without deleting, move it outside the `modules/` directory or rename its Service Provider file so it doesn't match the discovery pattern.
+### "Can I temporarily disable a module without deleting it?"
+**Solution:** Any valid folder inside `modules/` is treated as active. To disable one without deleting, move the folder out of `modules/` or rename its Service Provider (so it no longer matches `*ServiceProvider.php`)—it will be skipped by discovery on the next `3d:discover` run.

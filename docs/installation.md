@@ -1,23 +1,24 @@
 # Installation Guide
 
 > [!IMPORTANT]
-> **Compatibility:** Morphling 3D requires **Laravel 10.x/11.x** and **PHP 8.2+**. Ensure your environment meets these requirements before proceeding.
+> **Compatibility:** Morphling 3D requires **Laravel 10.x or 11.x** and **PHP 8.2+**. Ensure your environment matches these requirements before proceeding.
 
-Morphling 3D transforms a standard Laravel installation into a modular, DDD-compliant powerhouse. The installation process is designed to be non-destructive, injecting the necessary scaffolding into a dedicated `modules/` directory.
-
----
-
-## Executive Summary
-Setting up Morphling 3D involves three main phases:
-1.  **Dependency Injection:** Pulling the core engine via Composer.
-2.  **Structural Bootstrapping:** Initializing the `modules/` root and shared primitives.
-3.  **Namespace Registration:** Mapping the new directory to the Laravel autoloader.
+Morphling 3D upgrades a standard Laravel app into a modular, domain-driven system following clear boundaries. Its installation is non-destructive and scaffolds the necessary structure into a dedicated `modules/` directory without touching your existing business code.
 
 ---
 
-## 1. Package Installation
+## Overview
 
-Begin by adding the package to your development dependencies.
+Installing Morphling 3D has three essential steps:
+1.  **Require the package via Composer**
+2.  **Bootstrap the modular system**
+3.  **Register the PSR-4 namespace in Composer**
+
+---
+
+## 1. Install the Composer Package
+
+Require Morphling 3D in your project:
 
 ```bash
 composer require morphling-dev/3d
@@ -25,41 +26,39 @@ composer require morphling-dev/3d
 
 ---
 
-## 2. Bootstrapping the Engine
+## 2. Bootstrap the Modular Skeleton
 
-Initialize the modular architecture. This command creates the necessary filesystem structure and publishes the core configuration.
+Run the installer to initialize Morphling's architecture. This will create the required directories and publish configuration.
 
 ```bash
 php artisan 3d:install
 ```
 
-### What happens under the hood?
-* **Directory Creation:** Generates the `modules/` root folder.
-* **Shared Layer:** Scaffolds `modules/Shared`, containing base classes like `BaseUseCase` and `ApiResponse`.
-* **Configuration:** Publishes `config/3d.php` to your application's config directory.
+### This command will:
+- **Create the `modules/` folder:** The home of all your modules.
+- **Scaffold Shared primitives:** Generates `modules/Shared`, including foundational classes like `BaseUseCase`, `ApiResponse`, and other reusable components.
+- **Publish configuration:** Places the config file at `config/3d.php` for customization options.
 
 ---
 
-## 3. Registering the Namespace (Critical)
+## 3. Register the Module Namespace
 
-For Laravel to "see" your modules, you must register the `Modules\` namespace in your `composer.json` file. This is a manual step required by PHP's PSR-4 standard.
+Laravel needs to know about your `Modules\` classes. Add it to the `composer.json` autoload section with PSR-4. This allows Laravel to automatically discover and autoload your modules.
 
-### Edit `composer.json`
-Add the following line to your `autoload` section:
+**Edit your `composer.json`:**
 
 ```json
 "autoload": {
     "psr-4": {
         "App\\": "app/",
-        "Modules\\": "modules/",
-        "Database\\Factories\\": "database/factories/",
-        "Database\\Seeders\\": "database/seeders/"
+        "Modules\\": "modules/"
     }
 }
 ```
 
-### Refresh the Autoloader
-After saving the file, you **must** regenerate the symlinks:
+If you have additional entries (e.g., for database factories or seeders), keep them as usual.
+
+**Then update the autoloader:**
 
 ```bash
 composer dump-autoload
@@ -69,41 +68,63 @@ composer dump-autoload
 
 ## 4. Configuration (Optional)
 
-If your project requires a custom directory name (e.g., `src/` instead of `modules/`), modify `config/3d.php`:
+If you want the module folder under a different name (example: `src/` instead of `modules/`), edit `config/3d.php`:
 
-| Parameter | Default | Description |
-| :--- | :--- | :--- |
-| `base_path` | `base_path('modules')` | The physical location of your modules. |
-| `base_namespace` | `'Modules'` | The root PSR-4 namespace for all modules. |
+| Parameter | Default                  | Description                                |
+|-----------|--------------------------|--------------------------------------------|
+| `base_path`      | `base_path('modules')` | Filesystem location for modules.           |
+| `base_namespace` | `'Modules'`             | PSR-4 namespace root for all modules.      |
+
+Update your `composer.json` autoload PSR-4 to match any customizations.
 
 ---
 
-## 5. Verification & First Run
+## 5. Verify Your Installation
 
-To confirm the installation is successful, run the following verification sequence:
+Check if Morphling 3D is set up correctly:
 
 ```bash
-# 1. Generate a test module
-php artisan module:new Sandbox
+# 1. Create a demo module named Sandbox
+php artisan 3d:new Sandbox
 
-# 2. Register the module routes and providers
-php artisan module:discover
+# 2. Discover and register module routes/providers
+php artisan 3d:discover
 
-# 3. List active modules
-php artisan module:list
+# 3. List registered modules
+php artisan 3d:list
 ```
 
 > [!NOTE]
-> If `Sandbox` appears in the list, your architecture is correctly wired.
+> If you see `Sandbox` in the output, your environment is ready for modular development.
 
 ---
 
 ## Troubleshooting
 
 ### Class 'Modules\...' Not Found
-**Cause:** Usually a missing `composer dump-autoload` or a typo in the `composer.json` PSR-4 block.
-**Fix:** Verify the path in `composer.json` and run the dump command again.
 
-### 3d:install Fails
-**Cause:** Permission issues or an existing `modules/` directory that isn't empty.
-**Fix:** Ensure the web server/user has write permissions to the root directory.
+**Possible Causes**
+- You forgot to run `composer dump-autoload` after editing `composer.json`
+- Typo or incorrect path in the PSR-4 block of your `composer.json`
+
+**Solution**
+- Double-check your `composer.json`, then rerun:
+
+```bash
+composer dump-autoload
+```
+
+---
+
+### `php artisan 3d:install` Fails
+
+**Possible Causes**
+- Permissions issue, or
+- Pre-existing (non-empty) `modules/` directory
+
+**Solution**
+- Ensure your user or web server has write permissions to your project root.
+- Remove or empty any pre-existing `modules/` directory, if needed.
+
+---
+

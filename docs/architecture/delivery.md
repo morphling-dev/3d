@@ -1,49 +1,51 @@
 # The Delivery Layer: The Interface Boundary
 
-The **Delivery Layer** is the "Front Desk" of your module. It is the only layer that interacts with the outside world—whether that’s a web browser, a mobile app via an API, or a developer using a CLI command. Its primary mission is to translate incoming requests into a language the internal layers understand, and then format the internal results into a response the user expects.
+The **Delivery Layer** is the entry and exit point of your module—it's where your module connects with the outside world. This includes web browsers via HTTP, APIs consumed by mobile apps, or even CLI commands. Its core job is to translate incoming requests into a form usable by the inner layers, and format results from the system into responses required by the user or client. **It must never contain business logic itself.**
 
 ---
 
 ## Executive Summary
-In Morphling 3D, the Delivery layer is strictly responsible for **Input** and **Output**. It handles routing, middleware, request validation, and response formatting (JSON, Blade views, or redirects). It must never contain business logic.
+Within Morphling 3D, the Delivery Layer is strictly dedicated to **handling Input and Output operations**. This covers: routing, executing middleware, validating incoming requests, mapping raw inputs to DTOs, and formatting outgoing responses (e.g., JSON, Blade Views, redirects). The Delivery Layer’s role is to be the boundary and translator—it must not contain any decisions or business rules.
 
 > [!NOTE]
-> **Status:** `Interface` | **Dependency:** `Depends on Application`
+> **Layer Role:** `Interface` | **Can depend on:** `Application Layer (Use Cases, DTOs)`
 
 ---
 
 ## Key Concepts: The "Translator" Model
-Think of the Delivery layer as a high-end concierge. They listen to the guest's request (The HTTP Request), verify their credentials (Validation), fill out a standard internal form (The DTO), and hand it to the manager (The Use Case). When the manager is done, the concierge presents the result beautifully to the guest.
+Picture the Delivery layer as a concierge desk at a grand hotel. The guest presents a need (HTTP request); the concierge checks their credentials (validation), fills out a structured internal form (DTO), and passes it on to management (the UseCase). Once management processes the request, the concierge relays the results back to the guest—polished and ready.
 
 ---
 
 ## What Morphling 3D Generates
 
-The engine provides generators for every common entry and exit point:
+Morphling 3D's code generation ensures you never mix responsibilities. Every common interface point has a dedicated generator:
 
 | Command | Generates | Purpose |
 | :--- | :--- | :--- |
-| `module:make-controller` | `Delivery/Controllers/*` | Directs traffic and maps Requests to Use Cases. |
-| `module:make-request` | `Delivery/Requests/*` | Handles authorization and input validation. |
-| `module:make-resource` | `Delivery/Resources/*` | Transforms Entities/Models into specific JSON shapes. |
-| `module:make-route` | `Delivery/Routes/*` | Defines the `web.php` or `api.php` endpoints. |
-| `module:make-view` | `Delivery/Views/*` | Blade templates namespaced to the module. |
+| `3d:make-controller` | `Delivery/Controllers/*` | Receives requests and hands them to Use Cases. |
+| `3d:make-request` | `Delivery/Requests/*` | Handles request input validation and authorization. |
+| `3d:make-resource` | `Delivery/Resources/*` | Formats output for API responses, transforming Entities/Models to desired shapes. |
+| `3d:make-route` | `Delivery/Routes/*` | Defines entry points (`web.php`, `api.php`) for the module. |
+| `3d:make-view` | `Delivery/Views/*` | Blade templates scoped to and owned by the module. |
+
+> **Note:** Commands use the `3d:` prefix, not `module:`.
 
 ---
 
 ## Technical Reference: The Controller Flow
 
-A clean Morphling 3D controller should be remarkably short. Its only "intelligence" is knowing which Use Case to call and how to return the data.
+Controllers in Morphling 3D modules should do as little as possible. Their only "knowledge" is which Use Case to call and how to relay the result.
 
 ```php
-### modules/Transaction/Delivery/Controllers/TransactionController.php
+// modules/Transaction/Delivery/Controllers/TransactionController.php
 
 public function store(CreateTransactionRequest $request, ProcessPaymentUseCase $useCase): JsonResponse 
 {
-    // 1. Convert validated Request into a type-safe DTO
+    // 1. Convert the validated Request into a type-safe DTO
     $dto = TransactionDto::fromRequest($request);
-    
-    // 2. Execute the Use Case (Application Layer)
+
+    // 2. Pass DTO to the Application Layer via the Use Case
     $result = $useCase->execute($dto);
 
     // 3. Return a standardized API response
@@ -58,38 +60,49 @@ public function store(CreateTransactionRequest $request, ProcessPaymentUseCase $
 
 ## Request Validation & DTO Mapping
 
-By using `FormRequest` classes, you keep your controllers from becoming cluttered with validation rules.
+Use Laravel's `FormRequest` classes to separate validation from controllers. This keeps controller actions clear of validation clutter.
 
-* **Validation:** Happens automatically before the controller method is even hit.
-* **DTO Conversion:** The `TransactionDto::fromRequest($request)` method is the bridge. It strips away the "Web" context (cookies, headers, session) and keeps only the raw data needed for the business logic.
+* **Validation:** Automatically performed by the FormRequest before your controller method is invoked.
+* **DTO Conversion:** Use the `YourDto::fromRequest($request)` pattern to create the relevant DTO, containing only the data essential for business logic. This removes web-specific context (cookies, headers, etc.).
 
 ---
 
 ## View Namespacing
 
-Morphling 3D automatically registers a view namespace for every module. This avoids name collisions across your application.
+Morphling 3D automatically creates a custom view namespace for each module (e.g., `view('transaction::index')`). This ensures:
+
+- No collisions between views across modules.
+- UI assets are co-located with their owning logic.
 
 ```php
-// Standard Laravel: view('index')
+// Vanilla Laravel: view('index')
 // Morphling 3D: view('transaction::index')
 ```
-
-This allows you to organize your UI components alongside the logic they represent, making the module truly self-contained.
 
 ---
 
 ## Best Practices: The "Thin Controller" Rule
 
-* **Zero Logic:** If you see an `if ($balance > 0)` in your controller, it's a red flag. That belongs in the **Domain**.
-* **One Responsibility:** The controller should only handle HTTP-related tasks (setting headers, status codes, and redirects).
-* **Use Resources:** For complex API outputs, always use `JsonResource` to keep your output transformation logic separate from your controller.
+* **No Business Logic:** If you spot anything like `if ($balance > 0)` in your controller, move it to a Use Case (Application Layer) or Entity/Domain object (Domain Layer).
+* **Single Responsibility:** Controllers should deal only with HTTP/request context: extracting and validating input, invoking Use Cases, and packaging output.
+* **Resource Classes:** For complex outputs, always use API Resources (extends `JsonResource`) to handle transformation and avoid logic leaks into controllers.
 
 ---
 
 ## Troubleshooting
 
 ### "My routes aren't working!"
-Check your Module's **Service Provider** in the Infrastructure layer. Ensure `registerRoutes()` is being called in the `boot()` method. If you just added the file, run `php artisan module:discover`.
+Ensure the Module's Service Provider—in the **Infrastructure** layer—properly loads your routes. In the `boot()` method, `registerRoutes()` must be called. If you've created new module files, run:
+
+```bash
+php artisan 3d:discover
+```
+to refresh all module registrations.
 
 ### "How do I share layouts between modules?"
-Keep your global layouts in the standard Laravel `resources/views/layouts` folder or create a `Shared` module view namespace (e.g., `view('shared::layouts.app')`).
+Store project-wide layouts in Laravel's conventional `resources/views/layouts`, or centralize them in a `Shared` module. Then use:
+
+```php
+view('shared::layouts.app')
+```
+for layouts accessible from any module.

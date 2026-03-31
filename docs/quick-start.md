@@ -1,85 +1,102 @@
 # Quick Start Guide
 
-> [!IMPORTANT]
-> **Prerequisites:** Laravel 10.x or 11.x and PHP 8.2+. Ensure your `composer.json` is writable.
+> **Prerequisites:** Laravel 10.x or 11.x and PHP 8.2+. Make sure your `composer.json` is writable.
 
-This guide provides the minimal steps to get **Morphling 3D** running in your environment. Follow these four steps to move from a standard MVC setup to a robust, DDD-ready modular architecture.
+This quick start will walk you through the minimal steps required to set up **Morphling 3D** and transition from a standard Laravel MVC structure to a robust, Domain-Driven Design modular architecture.
 
 ---
 
 ## 1. Installation
 
-Install the engine via Composer and run the internal setup routine to publish configuration and core service providers.
+Install Morphling 3D via Composer, then run the installer to publish configuration and bootstrapping files.
 
 ```bash
 # Install the package
 composer require morphling-dev/3d
 
-# Run the Morphling initializer
+# Run the Morphling 3D installer
 php artisan 3d:install
 ```
 
-### PSR-4 Configuration
-Morphling 3D expects a `Modules\` namespace. Verify your `composer.json` contains the following mapping to ensure the service discovery works correctly:
+### PSR-4 Autoload Section
+
+Morphling 3D works best when your modules are autoloaded under the `Modules\` namespace. Update your `composer.json` to include the following (add `"Modules\\": "modules/"`):
 
 ```json
 "autoload": {
     "psr-4": {
         "App\\": "app/",
-        "Modules\\": "modules/",
-        "Database\\Factories\\": "database/factories/",
-        "Database\\Seeders\\": "database/seeders/"
+        "Modules\\": "modules/"
     }
 }
 ```
 
-After updating, refresh the autoloader:
+Then, regenerate the autoloader with:
+
 ```bash
 composer dump-autoload
 ```
 
 ---
 
-## 2. Scaffold Your First Module
+## 2. Create Your First Module
 
-Morphling 3D uses a single command to generate the entire directory structure, including DTOs, Use Cases, Entities, and Repositories.
+Generate a new module with Morphling 3D’s dedicated Artisan command (replace `Order` with your module name):
 
 ```bash
-php artisan module:new Transaction
+php artisan 3d:new Order
 ```
 
-[Placeholder: Diagram of the generated 4-layer file structure]
+This will scaffold the full four-layer structure for the new module inside `modules/Order`:
+
+```
+modules/
+└── Order/
+    ├── Application/
+    ├── Domain/
+    ├── Infrastructure/
+    └── Delivery/
+```
 
 ---
 
-## 3. Service Discovery
+## 3. Module Discovery
 
-Morphling 3D features **Zero-Config Registration**. However, when you add new routes or providers within a module, you must trigger the discovery heart-beat to cache the modular map.
+Morphling 3D automatically manages module registration. However, if you add or remove routes, providers, or modules, run the discovery command to refresh the modular map:
 
 ```bash
-php artisan module:discover
+php artisan 3d:discover
 ```
 
 ---
 
-## 4. Launch & Verify
+## 4. Verify Everything Works
 
-Start your local development server to test the auto-generated endpoints.
+Start the local development server:
 
 ```bash
 php artisan serve
 ```
 
-> [!NOTE]
-> By default, the generator creates a sample route in `modules/Transaction/Delivery/Routes/api.php`. You can verify it by running `php artisan route:list`.
+By default, each new module includes a sample route in `modules/Order/Delivery/Routes/api.php`. You can view all registered routes with:
+
+```bash
+php artisan route:list
+```
 
 ---
 
-## Quick Reference: Commands
+## Quick Reference: Core Commands
 
-| Task | Command |
-| :--- | :--- |
-| **Install** | `php artisan 3d:install` |
-| **New Module** | `php artisan module:new {Name}` |
-| **Refresh Map** | `php artisan module:discover` |
-| **Clear Cache** | `php artisan module:clear` |
+| Task             | Command                                  |
+| :--------------- | :--------------------------------------- |
+| **Install**      | `php artisan 3d:install`                 |
+| **New Module**   | `php artisan 3d:new {ModuleName}`        |
+| **Discover**     | `php artisan 3d:discover`                |
+| **Delete Module**| `php artisan 3d:delete {ModuleName}`     |
+| **List Modules** | `php artisan 3d:list`                    |
+| **Route List**   | `php artisan 3d:route:list`              |
+
+---
+
+You’re ready to build enterprise-grade, modular Laravel apps with Morphling 3D!

@@ -1,18 +1,16 @@
 # **Unit Testing Entities (Domain Layer)**
 
-Unit testing in the **Domain Layer** is the most rewarding part of Morphling 3D. Because Entities and Value Objects are "Pure PHP" (no Laravel dependencies), these tests run in milliseconds and provide an ironclad guarantee that your business rules are being followed.
+Unit testing within the **Domain Layer** is foundational in Morphling 3D. Since Entities and Value Objects rely solely on pure PHP without any Laravel dependency, their tests execute extremely fast, and offer strong assurance that your critical business rules are properly enforced.
 
 ---
 
-## **The Goal of Entity Testing**
-We are not testing if data can be saved to a database. We are testing **Invariants**—the rules that must *always* be true for a business object to be valid.
-
-
+## **The Purpose of Entity Testing**
+Entity tests **do not** verify persistence, storage, or database interaction. Instead, they verify that **invariants**—the fundamental rules that must *always* be true for your business objects—are upheld.
 
 ---
 
-## **1. Testing Construction & Validation**
-An Entity should never exist in an invalid state. We test that the constructor or "factory" methods throw exceptions when given bad data.
+## **1. Construction & Validation**
+An Entity must never be allowed to exist in an invalid state. Your tests should confirm that constructors or factory methods throw exceptions if invalid data is provided.
 
 ```php
 namespace Modules\Transaction\Tests\Unit\Domain\Entities;
@@ -29,7 +27,7 @@ class TransactionEntityTest extends TestCase
 
         new TransactionEntity(
             id: 'trx-001',
-            amount: -100, // Invalid business rule
+            amount: -100, // Violates business invariant
             status: 'pending'
         );
     }
@@ -38,8 +36,8 @@ class TransactionEntityTest extends TestCase
 
 ---
 
-## **2. Testing State Transitions**
-Business logic often revolves around moving from one state to another (e.g., `Pending` -> `Completed`). We test that these transitions work correctly and fail when they shouldn't.
+## **2. State Transition Logic**
+A major part of business logic involves changing between valid states (for example, from `Pending` to `Completed`). Your tests should ensure allowed transitions succeed, and forbidden transitions fail.
 
 ```php
 public function test_it_can_be_marked_as_completed()
@@ -64,8 +62,8 @@ public function test_it_cannot_be_cancelled_if_already_completed()
 
 ---
 
-## **3. Testing Value Objects**
-Value Objects (like `Email`, `Price`, or `Coordinates`) are immutable. We test their internal logic and equality checks.
+## **3. Value Object Behavior**
+Value Objects (such as `Email`, `Money`, or `Coordinates`) are always immutable. Test their validation logic and equality—which is central to DDD.
 
 ```php
 public function test_money_value_objects_with_same_values_are_equal()
@@ -81,16 +79,16 @@ public function test_money_value_objects_with_same_values_are_equal()
 
 ---
 
-## **Why This is Powerful**
+## **Why Entity Unit Testing is Valuable**
 
-* **Documentation by Example:** New developers can read `TransactionEntityTest.php` to understand the business rules of the module without reading a 50-page PRD.
-* **Instant Feedback:** You can run hundreds of these tests in less than a second. 
-* **Zero Side Effects:** Since there is no database involved, you don't have to worry about cleaning up state or "leaking" data between tests.
+* **Living Documentation:** Entity tests (like `TransactionEntityTest.php`) serve as clear, executable examples of your business rules—new developers can quickly learn the essentials.
+* **Ultra Fast Feedback:** With no need for the Laravel container, database, or external dependencies, these tests run nearly instantly.
+* **Full Isolation:** There are zero side effects—no cleanup, no test pollution, and no need for faked or seeded data.
 
 ---
 
 ## **Best Practices**
 
-* **Use `PHPUnit\Framework\TestCase`:** Avoid `Tests\TestCase` (Laravel's base test) for Domain units to keep them lightning-fast.
-* **One Rule Per Test:** Keep your test methods small and focused on a single business scenario.
-* **Mocking:** You should rarely need to mock anything in an Entity test. If you do, your Entity might be doing too much (consider a **Domain Service**).
+* **Use `PHPUnit\Framework\TestCase`:** Stick to vanilla PHPUnit in the Domain layer. Do not use `Tests\TestCase` (the Laravel base test), which slows down test runs and ties your domain to Laravel.
+* **Single Responsibility Per Test:** Write small, focused test methods that each validate one business rule or scenario.
+* **Minimal Mocking:** Mocks are rarely needed for Entities. If you find yourself mocking collaborators often, your Entity might need to delegate to a Domain Service instead.

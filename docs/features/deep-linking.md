@@ -1,72 +1,72 @@
 # Deep-Linking: From Browser to Code
 
-**Deep-Linking** is a productivity feature built into the Morphling 3D **Delivery Layer**. It bridges the gap between the rendered UI in your browser and your development environment, allowing you to jump directly to a specific line of code with a single click.
+**Deep-Linking** is a developer feature available as part of Morphling 3D's **Delivery Layer**. It lets you jump directly from the browser—where your Blade views are rendered—to the exact file in your code editor, accelerating navigation and feedback cycles.
 
 -----
 
 ## Executive Summary
 
-When you generate a new module, the default `index.blade.php` view includes a "Dev Toolbar" or an "Open in Editor" button. This uses custom URI schemes to communicate with your IDE (Integrated Development Environment).
+When you generate a new module with Morphling 3D, the default `index.blade.php` view includes a "Dev Toolbar" (or a simple "Open in Editor" button). When clicked, this button triggers a custom URI link to open the server-side Blade file in your editor, precisely where the file lives.
 
-> [\!NOTE]
-> **Status:** `Developer Utility` | **Layer:** `Delivery (View)`
-
------
-
-## How the Handoff Works
-
-The system uses a "Waterfall Fallback" strategy. It attempts to open the file using the most popular modern editors in order of preference.
-
-### The Priority Sequence
-
-1.  **Cursor (`cursor://`):** The primary target for AI-driven development.
-2.  **VS Code (`vscode://`):** The industry standard fallback.
-3.  **PHPStorm (`phpstorm://`):** The preferred heavy-duty IDE for Laravel.
-
-### The Logic (JavaScript)
-
-The view includes a small script that monitors the browser's `blur` event. If the browser loses focus after a protocol is triggered, the script assumes the editor opened successfully. If not, it tries the next protocol in the list after a 500ms timeout.
+> [!NOTE]
+> **Status:** Developer Utility &rightarrow; **Layer:** Delivery (View)
 
 -----
 
-## Why This Matters
+## How Deep-Linking Works
 
-  * **Instant Context:** In a modular system with hundreds of files, finding `modules/Transaction/Delivery/Views/index.blade.php` manually can be slow. Deep-linking takes you there in 0.5 seconds.
-  * **Rapid Prototyping:** As you tweak your **Generators** or **Stubs**, you can instantly verify the output in the browser and jump back to the code to refine it.
-  * **Reduced Friction:** It keeps you in the "Flow State" by removing the mental overhead of navigating folder trees.
+Morphling 3D uses a waterfall approach to maximize compatibility with common editors. The feature attempts to open files in your editor using a sequence of protocol handlers.
+
+### Editor Protocol Priority
+
+1. **Cursor (`cursor://`)** — First, tries Cursor for AI-assisted workflows.
+2. **VS Code (`vscode://`)** — Next, falls back to Visual Studio Code, fully supported for Laravel development.
+3. **PhpStorm (`phpstorm://`)** — Finally, tries PhpStorm for those using JetBrains tools.
+
+### Browser-to-Editor Handoff
+
+When the button is pressed, a tiny JavaScript snippet attempts to open the file with the top-priority protocol. If the editor doesn't claim focus (the browser doesn't "blur"), it waits about 500ms and tries the next. This maximizes your chance of success even with security restrictions or unregistered handlers.
 
 -----
 
-## Technical Implementation
+## Why Deep-Linking Is Important
 
-This feature is injected via the `view.stub`. It automatically detects the server-side file path and passes it to the client-side JavaScript.
+  * **Direct Navigation:** In a modular structure like Morphling 3D's (`modules/Transaction/Delivery/Views/index.blade.php`), it can be tedious to locate deeply nested files. With deep-link, you jump straight there.
+  * **Fast Iteration:** When customizing generated files (like stubs or view templates), iterate instantly—edit, save, refresh, repeat—without directory hunting.
+  * **Low Mental Overhead:** Stay "in flow." Avoid context-switching to your file explorer when moving between browser and code.
+
+-----
+
+## How It’s Implemented
+
+The deep-link button is part of the default `view.stub` used for new Delivery views. The system injects the PHP file path into the markup, which is picked up by the client-side script.
 
 ```php
-{{-- Generated snippet in Delivery/Views/index.blade.php --}}
+{{-- Example output from Delivery/Views/index.blade.php --}}
 <button onclick="openCodeEditor('{{ $filePath }}', 1)">
     Open in Editor
 </button>
 ```
 
-> [\!TIP]
-> **Pro-Tip:** You can customize the priority order or add your own custom editor protocol by editing the `stubs/view.stub` file in your root directory.
+> [!TIP]
+> **Customization:** Reorder or extend editor protocol preferences by tweaking the `stubs/view.stub` file in your project root. Add your own editor URI as needed.
 
 -----
 
 ## Troubleshooting
 
-### "Nothing happens when I click the button"
+### Clicking the button does nothing
 
-  * **Protocol Registration:** Ensure your editor is registered as a URL handler in your Operating System. (e.g., In VS Code, ensure "Shell Command: Install 'code' command in PATH" has been run).
-  * **Browser Permissions:** Some browsers (like Chrome) may show a popup asking: *"Allow this site to open the cursor link?"* You must click **Allow**.
+  * **Protocol Handler Not Found:** Make sure your editor can open files via custom URIs. For VS Code, the "Shell Command: Install 'code' command in PATH" must be set.
+  * **Browser Prompts:** Browsers like Chrome may prompt, e.g., “Allow this site to open the vscode link?” — click Allow.
 
-### "It opens the wrong file"
+### Opens an unexpected file or errors
 
-  * **Environment Mismatch:** If you are developing inside a **Docker** container or a remote server (SSH), the file path on the server might not match the path on your local machine. You may need to configure "Path Mapping" in your IDE settings.
+  * **Path Mismatch:** On Docker, Vagrant, or remote SSH, the server’s file path may differ from your local system. Set up path mapping in your IDE so local and server file locations correspond.
 
 -----
 
-## Next Steps
+## Learn More
 
-  * **[Auto-Discovery](/features/auto-discovery.md):** Learn how this view becomes reachable in the first place.
-  * **[Generators](/features/generators.md):** See how to customize the `view.stub` to change the default look of your deep-link buttons.
+  * **[Auto-Discovery](/features/auto-discovery.md):** Discover how Morphling 3D wires up views automatically.
+  * **[Generators](/features/generators.md):** Customize the look and behavior of deep-linking buttons by altering your stub templates.

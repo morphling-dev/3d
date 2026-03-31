@@ -1,44 +1,47 @@
-# The Infrastructure Layer: The Implementation
+# The Infrastructure Layer: Implementation Details
 
-The **Infrastructure Layer** is the "Engine Room" of your module. While the Domain Layer defines *what* should happen, the Infrastructure Layer handles the technical details of *how* it happens. This includes database queries, file storage, external API calls, and background jobs.
+The **Infrastructure Layer** is the "Engine Room" of your module. While the Domain Layer declares *what* should happen, the Infrastructure Layer is responsible for *how* those things get done. This covers database access, file systems, external APIs, jobs/queueing, caching, and more.
 
 ---
 
 ## Executive Summary
-In Morphling 3D, the Infrastructure layer is the only place where framework-specific code (like Eloquent) and third-party SDKs are allowed to live. Its primary job is to fulfill the contracts (Interfaces) defined by the **Domain**.
+
+In Morphling 3D, the Infrastructure layer is the only place where framework-dependent code (e.g., Eloquent, Laravel services) or third-party SDKs are permitted. The core purpose of this layer is to provide concrete implementations of contracts (Interfaces) defined in the **Domain** layer.
 
 > [!NOTE]
 > **Status:** `Implementation` | **Dependency:** `Depends on Domain`
 
 ---
 
-## Key Concepts: The "Adapter" Model
-Think of the Infrastructure layer as a universal adapter. The Domain provides a standard "plug" (the Interface), and the Infrastructure provides the "socket" (the Eloquent Repository) that connects to the actual wall (the Database).
+## Key Concepts: The Adapter Pattern
 
+The Infrastructure layer acts as an adapter, translating between your technology-agnostic Domain contracts and the real-world requirements of your stack.
 
+- **Domain:** Defines an Interface (contract) for what must be done, with no knowledge of Laravel/Eloquent.
+- **Infrastructure:** Implements that Interface, using tools like Eloquent, Guzzle, filesystems, or third-party APIs to do the actual work.
 
 ---
 
 ## What Morphling 3D Generates
 
-Morphling 3D provides a comprehensive suite of generators for technical concerns:
+Morphling 3D scaffolds a variety of Infrastructure artifacts to keep your Domain clean and framework-agnostic:
 
-| Category | Command | Generates |
-| :--- | :--- | :--- |
-| **Persistence** | `module:make-model` | Eloquent Models & Migrations. |
-| **Data Flow** | `module:make-repo` | Eloquent Repository implementations. |
-| **Translation** | `module:make-mapper` | Logic to convert Models to Entities. |
-| **Bootstrapping**| `module:make-provider` | Service Providers for routes and views. |
-| **Async/Events** | `module:make-job` | Background Jobs and Event Listeners. |
+| Category          | Command                  | Output (Location)                                            |
+|:------------------|:------------------------|:-------------------------------------------------------------|
+| **Persistence**   | `3d:make-model`         | Eloquent Models & Migrations                                 |
+| **Data/Repo**     | `3d:make-repo`          | Repository implementations using Eloquent or other drivers    |
+| **Mapping**       | `3d:make-mapper`        | Mappers for Model <-> Entity conversion                      |
+| **Bootstrapping** | `3d:make-provider`      | Service Providers for registering bindings, routes, etc.      |
+| **Async/Events**  | `3d:make-job`           | Jobs (queues), events, event listeners                       |
 
 ---
 
-## Technical Reference: The Eloquent Repository
+## Technical Reference: Eloquent-Based Repository
 
-The Repository implementation is where the "magic" happens. It uses Eloquent to find data and a Mapper (or a method on the model) to return a **Domain Entity**.
+A Repository translates between technical and Domain concerns. It retrieves models with Eloquent, then converts them into **Domain Entities** (not Eloquent models!) using a Mapper or "toDomain" method.
 
 ```php
-### modules/Transaction/Infrastructure/Repositories/EloquentTransactionRepository.php
+// modules/Transaction/Infrastructure/Repositories/EloquentTransactionRepository.php
 
 class EloquentTransactionRepository implements TransactionRepositoryInterface
 {
@@ -47,14 +50,14 @@ class EloquentTransactionRepository implements TransactionRepositoryInterface
     public function findById(string $id): ?TransactionEntity
     {
         $record = $this->model->find($id);
-        
-        // Convert the database row into a pure Domain Entity
+
+        // Always return a pure Domain Entity
         return $record ? $record->toDomain() : null;
     }
 
     public function save(TransactionEntity $entity): void
     {
-        // Convert the Entity back into a database-friendly array
+        // Persist the Domain Entity, never expose Eloquent objects
         $this->model->updateOrCreate(
             ['id' => $entity->getId()],
             $entity->toPersistenceArray()
@@ -67,35 +70,39 @@ class EloquentTransactionRepository implements TransactionRepositoryInterface
 
 ## The Role of Mappers
 
-Mappers are the "secret sauce" that keep your Domain clean. They prevent your Domain Entities from knowing about database column names like `created_at` or `is_active_flg`.
+Mappers are crucial for keeping the Domain layer decoupled from technical concerns — no `created_at`, no Eloquent types, no database specifics.
 
-* **To Domain:** Transforms an Eloquent Model into a Domain Entity.
-* **To Persistence:** Transforms a Domain Entity into a raw array for Eloquent's `create()` or `update()`.
+* **To Domain:** Convert infrastructure models (like Eloquent models) into business-safe Domain Entities.
+* **To Persistence:** Convert Domain Entities into arrays/structures suitable for storage or transmission (e.g., Eloquent's `create/update`).
 
 ---
 
 ## Module Service Providers
 
-Every module has its own **ServiceProvider**. This is the brain of the Infrastructure layer that tells Laravel how to handle the module.
+Each module includes a **Service Provider** in its Infrastructure layer. This is responsible for:
 
-* **Route Registration:** Automatically loads `api.php` and `web.php` from the **Delivery** layer.
-* **Interface Binding:** Maps the `TransactionRepositoryInterface` to the `EloquentTransactionRepository`.
-* **View Namespaces:** Allows you to call `view('transaction::index')` from anywhere.
+- **Route Registration:** Auto-registering Delivery-layer route files (`api.php`, `web.php`).
+- **Binding Interfaces:** Telling Laravel to use your chosen Repository implementation for its respective Domain Interface.
+- **View Namespaces:** Registering namespaced views for the Delivery layer (`view('transaction::index')`).
 
 ---
 
-## Best Practices: The "Replaceable" Rule
+## Best Practices for Infrastructure
 
-* **Zero Leakage:** Never let an Eloquent Model escape the Repository. Always return an Entity or a DTO to the Application layer.
-* **Favor Composition:** If an Infrastructure service (like a PDF generator) gets too complex, break it down into smaller classes within the Infrastructure layer.
-* **Mockable Implementation:** Ensure your Repository is easily swappable in tests by relying solely on the Domain Interface.
+- **No Leakage:** Never return Eloquent models, helpers, or framework objects beyond Infrastructure; always use Entities or DTOs for Application/Domain interfaces.
+- **Favor Composition:** Complex Infrastructure features (e.g., a PDF system or payment gateway) should be separated into small, testable classes.
+- **Be Replaceable:** Repository implementations must be swappable for tests/fakes by relying only on Domain interfaces — never concrete classes.
 
 ---
 
 ## Troubleshooting
 
 ### "My migrations aren't running!"
-By default, Morphling 3D keeps migrations inside the module folder. You must uncomment `$this->registerMigrations()` in your module's `ServiceProvider` to enable them.
+
+By default, Morphling 3D stores migrations within the module directory. To use them, ensure you call `$this->registerMigrations()` in your module's ServiceProvider.
 
 ### "Why is my Repository getting crowded?"
-If your repository has 20+ methods, you might be mixing **Query Logic** (filtering/sorting) with **Persistence Logic** (saving/deleting). Consider using **Scopes** on your Eloquent models or creating a specific **Query Service**.
+
+If your repository grows too large (many query methods), separate **Query Logic** (fetching/filtering/sorting) from **Persistence Logic** (save/delete). Use Eloquent *scopes* or create dedicated *Query* services/objects.
+
+---

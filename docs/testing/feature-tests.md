@@ -1,21 +1,20 @@
 # **Feature Tests (Delivery Layer)**
 
-**Feature Tests** are the final piece of the Morphling 3D testing puzzle. While our other tests focused on logic and data, Feature Tests verify the **Entry Points**. They ensure that your routes are reachable, your validation rules are strict, and your JSON responses match the frontend's expectations.
+Feature Tests are a critical part of Morphling 3D's test suite. While unit and integration tests focus on your application's logic and data flow, Feature Tests validate the application's **HTTP entry points**—making sure routes are available, validation is robust, and your API responses are predictable for frontend consumers.
 
 ---
 
-## **The Goal of Feature Testing**
-In a DDD architecture, the Controller is "thin," so the Feature Test should be "thin" too. We are testing the **HTTP Contract**:
-1. Does the URL exist and have the correct Middleware (Auth, API)?
-2. Does the `FormRequest` reject invalid input (e.g., missing email)?
-3. Does the Controller correctly pass data to the Use Case and return the right Status Code (200, 201, 422)?
-
-
+## **Purpose of Feature Testing**
+In Morphling 3D's architecture, Controllers in the Delivery Layer are intentionally thin, delegating logic to the lower layers. Therefore, Feature Tests should focus on ensuring that:
+1. The correct routes exist and are protected by the appropriate middleware (e.g., `auth:api`, `sanctum`).
+2. The `FormRequest` validation is enforced, and invalid inputs are rejected before reaching application logic.
+3. Successful and failed requests return the expected HTTP status codes and JSON/API contract as per your frontend/backend agreement.
 
 ---
 
-## **1. Testing Successful API Requests**
-We want to verify that a valid request travels through the Controller and returns a successful `ApiResponse`.
+## **1. Testing a Successful API Request**
+
+Feature Tests should confirm that a valid user request, when sent to the intended route, is routed through the Controller, passes validation, interacts with the Application layer, and responds with a standardized `ApiResponse`.
 
 ```php
 namespace Modules\Transaction\Tests\Feature\Delivery\Controllers;
@@ -33,17 +32,16 @@ class TransactionControllerTest extends TestCase
         $payload = [
             'amount' => 5000,
             'currency' => 'IDR',
-            'description' => 'Payment for Invoice #101'
+            'description' => 'Payment for Invoice #101',
         ];
 
-        // Perform the POST request to the auto-discovered route
-        $response = $this->postJson('/api/transaction', $payload);
+        // Prefer named routes for discovery consistency
+        $response = $this->postJson(route('transaction.store'), $payload);
 
-        // Assertions
         $response->assertStatus(200)
                  ->assertJsonPath('is_success', true)
                  ->assertJsonPath('message', 'Transaction created successfully');
-
+        
         $this->assertDatabaseHas('transactions', ['amount' => 5000]);
     }
 }
@@ -51,14 +49,15 @@ class TransactionControllerTest extends TestCase
 
 ---
 
-## **2. Testing Validation (Delivery Boundaries)**
-This ensures your `Delivery/Requests` classes are doing their job before the logic even hits the Application layer.
+## **2. Testing Validation at the Delivery Boundary**
+
+These tests make sure your `Delivery/Requests` classes stop invalid requests before they reach the domain/app logic.
 
 ```php
 public function test_it_fails_validation_if_amount_is_missing()
 {
-    $response = $this->postJson('/api/transaction', [
-        'currency' => 'IDR'
+    $response = $this->postJson(route('transaction.store'), [
+        'currency' => 'IDR',
         // 'amount' is missing
     ]);
 
@@ -69,13 +68,14 @@ public function test_it_fails_validation_if_amount_is_missing()
 
 ---
 
-## **3. Testing View Delivery (Web)**
-If your module has a UI, you test that the namespaced Blade view renders correctly.
+## **3. Testing View Rendering (for Web Delivery)**
+
+If your module exposes Blade views, Feature Tests should check that the correct template renders and essential data is visible.
 
 ```php
 public function test_it_renders_the_transaction_index_page()
 {
-    $response = $this->get('/transaction');
+    $response = $this->get(route('transaction.index'));
 
     $response->assertStatus(200)
              ->assertViewIs('transaction::index')
@@ -85,16 +85,16 @@ public function test_it_renders_the_transaction_index_page()
 
 ---
 
-## **Why This is the Final Layer**
+## **Why Feature Testing Sits at the Top Layer**
 
-* **Security Check:** It’s where you verify that `auth:api` or `Sanctum` middleware is actually protecting your routes.
-* **Documentation for Frontend:** Feature tests essentially define the API documentation. If the test passes, the frontend developer knows exactly what JSON to expect.
-* **End-to-End Confidence:** It proves that the "Auto-Discovery" successfully wired the routes and that the Controller can talk to the Use Case.
+* **Middleware Verification:** Confirms real-world access controls (`auth:api`, `sanctum`, etc.) are applied at the route.
+* **API Contract Documentation:** Passing feature tests serve as live documentation for frontend/backend expectations.
+* **System Wiring Confidence:** Verifies that Morphling 3D's auto-discovery has connected routes, controllers, and use cases as intended.
 
 ---
 
 ## **Best Practices**
 
-* **Don't Over-Test Logic:** If you've already tested the business rules in a Unit Test, don't repeat those assertions here. Just check that the API returns a success/fail code.
-* **Use Named Routes:** Always use `route('transaction.store')` instead of hardcoded URLs to ensure your auto-discovery logic is working.
-* **Mocking the Use Case (Optional):** If your Use Case triggers a very expensive process (like generating a 50MB PDF), you can mock the Use Case inside the Feature Test to keep the test fast.
+* **Avoid Re-testing Business Logic:** Business rules are already covered by lower-layer tests. In feature tests, check only response shape and HTTP codes.
+* **Favor Named Routes:** Use `route('transaction.store')` (or relevant) over hardcoded `/api/transaction`, ensuring route auto-discovery is tested.
+* **Mock Heavy Use Cases (if needed):** For use cases with expensive external dependencies, consider mocking to keep feature tests fast and isolated.

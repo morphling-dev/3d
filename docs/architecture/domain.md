@@ -1,51 +1,52 @@
-# The Domain Layer: The Heart of the System
+# The Domain Layer: The Heart of Your Application
 
-The **Domain Layer** is the most critical part of a Morphling 3D module. It contains the "Reason for Being" for your software—the business rules, logic, and state that would remain true even if you switched from a web app to a mobile app or changed your database entirely.
+The **Domain Layer** is the core of a Morphling 3D module. It expresses your application's business concepts, logic, and rules—the essential truths that would remain the same even if you changed frameworks, UIs, or databases.
 
 ---
 
-## Executive Summary
-In Morphling 3D, the Domain is a **"Protected Kingdom."** It sits at the center of the architecture, and all other layers (Delivery, Application, Infrastructure) must point toward it. It knows nothing about Laravel, SQL, or JSON.
+## Domain Layer in Morphling 3D: At the Core
+
+In Morphling 3D, the Domain is the **centerpiece**. All other layers (Application, Infrastructure, Delivery) are structured around and point toward it. The Domain layer is completely decoupled—it knows nothing of Laravel, HTTP, storage, or any specific technology.
 
 > [!NOTE]
-> **Status:** `Pure Logic` | **Dependency:** `None (Inward-Facing)`
+> **Status:** `Pure Logic` | **Dependencies:** `None (Inward-Facing Only)`
 
 ---
 
-## Key Concepts: The "Pure Truth"
-The Domain layer is where you translate human business requirements into code. If a stakeholder says, *"A transaction cannot be processed if the balance is negative,"* that logic belongs in a **Domain Entity**, not a Controller.
+## Key Principles
 
-
+The Domain layer is where **business rules** live, translated directly from requirements and language shared with stakeholders. For example, if your business rule says, *"A transaction cannot be processed if the balance is negative,"* that logic should exist in a **Domain Entity**—not in a controller or service outside the Domain.
 
 ---
 
-## What Morphling 3D Generates
+## Domain Artifacts: What Morphling 3D Provides
 
-Morphling 3D provides specific generators to ensure your Domain is expressive and granular:
+Morphling 3D helps you create a well-structured Domain with dedicated generators:
 
 | Command | Generates | Purpose |
 | :--- | :--- | :--- |
-| `module:make-entity` | `Domain/Entities/*` | Objects with a unique identity (e.g., a specific Order). |
-| `module:make-vo` | `Domain/ValueObjects/*` | Objects defined by their attributes (e.g., an Email or Price). |
-| `module:make-enum` | `Domain/Enums/*` | Strict sets of states (e.g., `Status::PENDING`). |
-| `module:make-interface` | `Domain/Interfaces/*` | Contracts that Infrastructure must follow. |
-| `module:make-service` | `Domain/Services/*` | Logic that involves multiple Entities. |
+| `3d:make-entity` | `Domain/Entities/*` | Unique, identifiable business objects (e.g., `Order`, `User`). |
+| `3d:make-vo` | `Domain/ValueObjects/*` | Attribute-defined objects (e.g., `Email`, `Money`). |
+| `3d:make-enum` | `Domain/Enums/*` | Strict sets of possible states (e.g., `Status::PENDING`). |
+| `3d:make-interface` | `Domain/Interfaces/*` | Contracts for repositories/services. |
+| `3d:make-service` | `Domain/Services/*` | Domain logic involving multiple entities or coordination. |
 
 ---
 
-## Technical Reference: The Domain Entity
+## Example: A Domain Entity
 
-Unlike an Eloquent Model, a **Domain Entity** is a "Plain Old PHP Object" (POPO). It focuses on behavior, not database columns.
+A **Domain Entity** is a "Plain Old PHP Object" (POPO)—it models behavior and identity, not database columns or framework details.
 
 ```php
-### modules/Transaction/Domain/Entities/TransactionEntity.php
+// modules/Transaction/Domain/Entities/TransactionEntity.php
 
-class TransactionEntity 
+class TransactionEntity
 {
     private string $id;
     private string $status;
 
-    public function __construct(string $id, string $status) {
+    public function __construct(string $id, string $status)
+    {
         $this->id = $id;
         $this->status = $status;
     }
@@ -56,7 +57,7 @@ class TransactionEntity
     public function cancel(): void
     {
         if ($this->status !== 'pending') {
-            throw new \DomainException("Cannot cancel a transaction that is already {$this->status}.");
+            throw new \DomainException("Cannot cancel a transaction in status: {$this->status}.");
         }
         $this->status = 'cancelled';
     }
@@ -65,12 +66,12 @@ class TransactionEntity
 
 ---
 
-## Repository Interfaces: The Contract
+## Repository Interfaces: Domain Contracts
 
-The Domain layer defines **how** it wants to be saved, but it doesn't care **where**. It creates an `Interface` that the Infrastructure layer must implement.
+Repositories are defined as **interfaces** in the Domain. These describe what persistence operations the Domain expects. The Infrastructure layer provides concrete implementations—but the Domain never depends on them.
 
 ```php
-### modules/Transaction/Domain/Repositories/TransactionRepositoryInterface.php
+// modules/Transaction/Domain/Repositories/TransactionRepositoryInterface.php
 
 interface TransactionRepositoryInterface
 {
@@ -81,20 +82,21 @@ interface TransactionRepositoryInterface
 
 ---
 
-## Best Practices: The "Pure Domain" Test
+## Domain Self-Check: "Pure Domain" Test
 
-To ensure your Domain layer is healthy, ask yourself these three questions:
-1.  **Can I run a unit test on this Entity without starting Laravel?** (Should be Yes).
-2.  **Does this file import any `Illuminate\...` classes?** (Should be No, except for rare primitives).
-3.  **If we changed from MySQL to a CSV file, would this file change?** (Should be No).
+Ensure your Domain layer remains clean and decoupled by answering:
+
+1. **Can I unit test this Entity without booting Laravel or any framework?** (Yes)
+2. **Does this file import any `Illuminate\...` or framework classes?** (No)
+3. **Would this file need to change if you switched your storage from MySQL to files, or even in-memory arrays?** (No)
 
 ---
 
-## Troubleshooting
+## FAQ & Troubleshooting
 
-### "Where do I put my validation?"
-* **Input Validation** (Is this an email?) belongs in the **Delivery Layer** (`FormRequest`).
-* **Business Validation** (Is this user allowed to spend this much?) belongs here in the **Domain Layer**.
+### Where does validation belong?
+- **Input Validation** (e.g., is this an email address?) goes in the **Delivery Layer** (`FormRequest` or input DTOs).
+- **Business Validation** (e.g., can this user withdraw this amount?) belongs in the **Domain Layer** (Entities or Services).
 
-### "My Entity is missing the `save()` method!"
-That is intentional. Entities should not save themselves (Active Record pattern). Instead, pass the Entity to a **Repository** within a **Use Case**.
+### Why don’t Entities have a `save()` method?
+Entities in the Domain layer do **not** save themselves (they are not Active Record models). Persist them using a **Repository** via a **Use Case** in the Application layer. This keeps persistence infrastructure outside of your core domain logic.

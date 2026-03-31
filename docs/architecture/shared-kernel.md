@@ -1,34 +1,37 @@
-# The Shared Kernel
+# Shared Kernel
 
-The **Shared Kernel (`modules/Shared`)** is the foundation of your Morphling 3D architecture. It contains the code that is globally applicable across all modules—such as base classes, common value objects, and infrastructure helpers. 
+The **Shared Kernel**—found in `modules/Shared`—is the foundational layer of your Morphling 3D architecture. It contains code and abstractions that are reused across all modules, such as base classes, global value objects, infrastructure support, and system-wide helpers.
 
-Without a well-defined Shared Kernel, you would find yourself duplicating code like API response structures or pagination logic in every single module.
-
----
-
-## The "Golden Rule" of Shared
-> **Shared must never depend on any other module.**
-
-A module like `Transaction` can depend on `Shared`, but `Shared` can **never** import a class from `Transaction`. This prevents circular dependencies that would break your entire application.
-
-
+A well-designed Shared Kernel prevents duplication of code (like API response wrappers or pagination logic) and ensures consistency across modules.
 
 ---
 
-## Directory Structure
+## Architectural Principle: The Golden Rule
 
-| Sub-Directory | Content Type | Example |
-| :--- | :--- | :--- |
-| **Application** | Base orchestration logic. | `BaseUseCase`, `BaseDto` |
-| **Domain** | Universal business logic. | `MoneyValueObject`, `BaseEntity` |
-| **Infrastructure** | Technical framework tools. | `ApiResponse`, `BaseRepository` |
+> **The Shared Kernel must NEVER depend on any feature or business module.**
+
+For example:  
+A module like `Transaction` **can** rely on code in `Shared`, but `Shared` must **never** import or reference code from `Transaction`—or any other module. This strictly prevents circular dependencies, which can break modularity and cause maintenance headaches.
 
 ---
 
-## Core Components Reference
+## Typical Directory Structure
 
-### 1. Application: `BaseUseCase`
-Every Use Case in your system should extend this abstract class. It ensures a consistent method signature and provides a place for global middleware-like logic (logging, DB transactions).
+| Sub-Directory        | Contents                               | Examples                              |
+|----------------------|----------------------------------------|---------------------------------------|
+| **Application**      | Base orchestration, DTOs               | `BaseUseCase`, `BaseDto`              |
+| **Domain**           | Universal entities, value objects      | `MoneyValueObject`, `BaseEntity`      |
+| **Infrastructure**   | Framework-level helpers & traits       | `ApiResponse`, `BaseRepository`       |
+
+> **Tip:** The files here should be free of business logic specific to any one bounded context or module.
+
+---
+
+## Key Shared Components
+
+### Application Layer: `BaseUseCase`
+
+Every UseCase in your application should extend this abstract class. It standardizes invocation and is the right place for common middleware-like logic (e.g., logging, transactions):
 
 ```php
 namespace Modules\Shared\Application\UseCases;
@@ -36,14 +39,15 @@ namespace Modules\Shared\Application\UseCases;
 abstract class BaseUseCase
 {
     /**
-     * The standard entry point for every business action.
+     * The required entry point for every business action.
      */
     abstract public function execute(mixed $dto = null): array;
 }
 ```
 
-### 2. Infrastructure: `ApiResponse`
-To ensure your frontend receives a predictable JSON structure, use this helper in your Controllers.
+### Infrastructure Layer: `ApiResponse`
+
+This helper ensures consistent API responses for your frontend consumers—from any controller across modules:
 
 ```php
 namespace Modules\Shared\Infrastructure\Helpers;
@@ -63,23 +67,42 @@ class ApiResponse
 
 ---
 
-## Best Practices
+## Shared Kernel Best Practices
 
-* **Global Enums:** Place standard status enums here (e.g., `ActiveStatus`, `Gender`).
-* **Common Traits:** If you have logic used by multiple Eloquent models (like `HasUuid`), put the Trait in `Shared/Infrastructure/Traits`.
-* **Interfaces:** Global contracts that span the entire system belong here.
-
----
-
-## When to Move Code into Shared
-Don't move code into `Shared` just because you think you *might* need it later. Wait until at least **two separate modules** require the exact same logic. This prevents the Shared Kernel from becoming a "junk drawer" of unused code.
+- **Enums:** Put global enums (e.g. `ActiveStatus`, `Gender`) here for status or categorization shared by all modules.
+- **Traits:** Common traits for repetitive model behaviors (like `HasUuid`) belong in `Shared/Infrastructure/Traits`.
+- **Interfaces:** Contracts that cut across the whole application—such as a `LoggerInterface`—should live here.
+- **Do not pollute:** Only move code to Shared when there’s a proven need in at least **two or more modules**.
+- **Keep it minimal:** Avoid turning Shared into a dumping ground for arbitrary utilities.
 
 ---
 
-## Troubleshooting
+## When to Generalize Into Shared
 
-### "Class Not Found"
-If you add a file to `Shared` and it isn't recognized, check your `composer.json`. Ensure the `Modules\\` namespace points to the `modules/` directory and run:
-```bash
-composer dump-autoload
-```
+**DON'T** add logic to `Shared` preemptively.  
+**DO** move code only when real, identical needs appear in multiple modules.  
+This avoids Shared becoming a maintenance burden or a "junk drawer" of assumptions and unused abstractions.
+
+---
+
+## Troubleshooting: Recognizing Shared Changes
+
+### "Class Not Found" After Adding Shared Files?
+
+1. Check your `composer.json` for:
+
+    ```json
+    "autoload": {
+        "psr-4": {
+            "Modules\\": "modules/"
+        }
+    }
+    ```
+
+2. Run the Composer autoloader to refresh class maps:
+
+    ```bash
+    composer dump-autoload
+    ```
+
+If you follow this, your newly added code in `Shared` should always be available to all other modules—without manual imports or hacks.

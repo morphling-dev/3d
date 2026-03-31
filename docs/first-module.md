@@ -1,24 +1,26 @@
 # Tutorial: Building Your First Module
 
-This guide walks you through the practical implementation of a **Transaction** module. You will learn how to move data through the four layers of Morphling 3D, ensuring that your business logic remains protected from infrastructure changes.
+This hands-on guide teaches you how to create a **Transaction** module using Morphling 3D, showing how data flows cleanly through all four architectural layers. You'll see how business logic stays isolated from infrastructure, resulting in highly maintainable code.
 
 ---
 
 ## Executive Summary
-In this tutorial, we implement a "Rename Transaction" feature. This demonstrates the "Outside-In" flow:
-1.  **Delivery**: Captures and validates the HTTP request.
-2.  **Application**: Converts the request into a DTO and calls the Use Case.
-3.  **Domain**: Executes the actual business rule (renaming logic).
-4.  **Infrastructure**: Saves the change to the database.
+
+We’ll build a "Rename Transaction" feature to demonstrate the structured, outside-in data flow:
+
+1.  **Delivery:** Receives and validates the HTTP request.
+2.  **Application:** Transforms the request into a DTO and invokes the relevant Use Case.
+3.  **Domain:** Executes business logic (e.g., renaming a transaction).
+4.  **Infrastructure:** Persists changes via repository interfaces.
 
 > [!NOTE]
-> **Status:** `Guided Tutorial` | **Time to Complete:** `10 Minutes`
+> **Status:** `Guided Tutorial` | **Time Required:** `10 Minutes`
 
 ---
 
 ## Prerequisites
 
-Before starting, ensure Morphling 3D is initialized in your Laravel project:
+Before starting, initialize Morphling 3D in your Laravel project:
 
 ```bash
 composer require morphling-dev/3d
@@ -30,25 +32,35 @@ composer dump-autoload
 
 ## Step 1: Generate the Module Structure
 
-Run the generator to create the DDD directory skeleton for a `Transaction` feature:
+Create the DDD skeleton for your `Transaction` module:
 
 ```bash
-php artisan module:new Transaction
+php artisan 3d:new Transaction
 ```
 
-### The Resulting Mental Model
-The generator creates a "Mini-Application" inside your `modules/` folder. Each layer has a specific boundary.
+### Your Mental Model
 
+This command scaffolds a modular and layered mini-application at `modules/Transaction`:
 
+```
+modules/
+└── Transaction/
+    ├── Application/
+    ├── Domain/
+    ├── Infrastructure/
+    └── Delivery/
+```
+
+Each directory enforces architectural boundaries.
 
 ---
 
 ## Step 2: Define Validation (Delivery Layer)
 
-Navigate to `modules/Transaction/Delivery/Requests/CreateTransactionRequest.php`. We define exactly what data is allowed into our system.
+In the Delivery layer, define what data is allowed into your module by creating a Form Request:
 
 ```php
-### modules/Transaction/Delivery/Requests/CreateTransactionRequest.php
+// modules/Transaction/Delivery/Requests/CreateTransactionRequest.php
 
 public function rules(): array
 {
@@ -63,55 +75,59 @@ public function rules(): array
 
 ## Step 3: Orchestrate the Use Case (Application Layer)
 
-The Use Case is the "Director." It doesn't know about the Database or the Web; it only knows how to coordinate the **Domain** and **Repository**.
+The Use Case coordinates the flow, relying only on abstractions. It should not access controllers, requests, or concrete models—only interfaces and DTOs.
 
-Open `modules/Transaction/Application/UseCases/GetTransactionListUseCase.php`:
+Example:
 
 ```php
-### modules/Transaction/Application/UseCases/GetTransactionListUseCase.php
+// modules/Transaction/Application/UseCases/RenameTransactionUseCase.php
 
-public function execute(mixed $dto = null): array
+public function execute(TransactionDto $dto): array
 {
     // 1. Extract data from the DTO
-    $id = $dto->data['id'];
-    $name = $dto->data['name'];
+    $id = $dto->id;
+    $name = $dto->name;
 
     // 2. Fetch Entity from the Repository Interface
     $entity = $this->repository->findById($id);
 
     if (!$entity) {
-        return ['is_success' => false, 'message' => 'Not found'];
+        return ['is_success' => false, 'message' => 'Transaction not found'];
     }
 
-    // 3. Trigger Domain Logic (The Business Rule)
+    // 3. Apply Domain Logic
     $entity->rename($name);
 
-    // 4. Persist via the Interface
+    // 4. Persist the updated Entity
     $this->repository->save($entity);
 
     return [
         'is_success' => true,
-        'message'    => 'Transaction updated successfully',
-        'data'       => ['id' => $entity->getId(), 'name' => $entity->getName()]
+        'message'    => 'Transaction renamed successfully',
+        'data'       => [
+            'id'   => $entity->getId(),
+            'name' => $entity->getName()
+        ]
     ];
 }
 ```
+> **Note:** Use case naming should match its intention (e.g. `RenameTransactionUseCase`).
 
 ---
 
-## Step 4: The Entry Point (Controller)
+## Step 4: Wire Up the HTTP Entry Point (Controller)
 
-Now, we wire the HTTP request to our Use Case. The Controller's only job is to translate.
+The Controller’s job: translate HTTP input to a DTO and delegate to the Use Case.
 
 ```php
-### modules/Transaction/Delivery/Controllers/TransactionController.php
+// modules/Transaction/Delivery/Controllers/TransactionController.php
 
-public function index(CreateTransactionRequest $request, GetTransactionListUseCase $useCase): JsonResponse
+public function rename(CreateTransactionRequest $request, RenameTransactionUseCase $useCase): JsonResponse
 {
-    // Convert Request -> DTO (Data Transfer Object)
+    // Convert Request -> DTO
     $dto = TransactionDto::fromRequest($request);
     
-    // Execute the business logic
+    // Handle business logic
     $result = $useCase->execute($dto);
 
     return ApiResponse::success(
@@ -120,38 +136,45 @@ public function index(CreateTransactionRequest $request, GetTransactionListUseCa
     );
 }
 ```
+> **Note:** Controllers remain thin and never contain business logic.
 
 ---
 
 ## Step 5: Activation & Testing
 
-### 1. Discovery
-Tell Morphling to find your new routes and service providers:
+### 1. Auto-Discovery
+
+Ask Morphling to register new modules, routes, providers:
+
 ```bash
-php artisan module:discover
+php artisan 3d:discover
 ```
 
-### 2. Verification
-Check that your route is registered:
+### 2. Route Verification
+
+Check that your new route(s) is active:
+
 ```bash
-php artisan route:list --name=transaction
+php artisan 3d:route:list --name=transaction
 ```
 
-### 3. Execution
-Test the flow using a simple `curl` command:
+### 3. End-to-End Test
+
+Use `curl` or Postman to test the full request flow:
+
 ```bash
-curl "http://localhost:8000/api/transaction?id=1&name=NewPayment"
+curl "http://localhost:8000/api/transaction/rename?id=1&name=NewPayment"
 ```
 
 ---
 
 ## Technical Reference: Best Practices
 
-| Do's | Don'ts |
-| :--- | :--- |
-| Use `TransactionDto` to move data between layers. | **Don't** pass `$request` into your Use Case. |
-| Type-hint Repository **Interfaces** in the Use Case. | **Don't** type-hint Eloquent Models in the Use Case. |
-| Keep `rename()` logic inside the `Entity`. | **Don't** put "if" statements for business rules in the Controller. |
+| Do's                                               | Don'ts                                                 |
+| :------------------------------------------------- | :----------------------------------------------------- |
+| Use `TransactionDto` to pass data between layers.   | **Don't** inject `$request` directly into Use Cases.   |
+| Rely on repository **interfaces** in the Use Case.  | **Don't** inject Eloquent models into Use Cases.       |
+| Encapsulate rename logic inside the Entity.         | **Don't** place domain rules in controllers.           |
 
 ---
 
@@ -159,8 +182,8 @@ curl "http://localhost:8000/api/transaction?id=1&name=NewPayment"
 
 ### Common Pitfalls
 
-* **Target Class Not Found:** You likely skipped `composer dump-autoload`. Morphling modules require the PSR-4 `Modules\\` mapping to be active.
-* **404 Not Found:** Ensure you ran `php artisan module:discover`. This command links your module's `routes.php` to the Laravel core.
-* **Interface Binding Error:** If Laravel can't resolve the Repository, check `Infrastructure/Providers/TransactionServiceProvider.php` to ensure the Interface is bound to the Eloquent implementation.
+* **Target Class Not Found:** Did you run `composer dump-autoload`? The PSR-4 mapping for `Modules\\` must be active.
+* **404 Not Found:** Did you run `php artisan 3d:discover`? That registers your module routes.
+* **Interface Binding Error:** Check `Infrastructure/Providers/TransactionServiceProvider.php` to ensure repository interfaces are bound to their implementations.
 
 ---

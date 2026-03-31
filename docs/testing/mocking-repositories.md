@@ -1,23 +1,27 @@
-# **Mocking Repositories (Application Layer)**
+# **Mocking Repositories for Use Case Testing**
 
-Testing the **Application Layer** is where we verify our **Use Cases**. Since a Use Case coordinates the flow between the Domain and the Database, we need a way to test that coordination without actually connecting to MySQL or PostgreSQL.
-
-This is achieved by **Mocking** the Repository Interfaces defined in the Domain.
+Testing in the **Application Layer** focuses on verifying the coordination logic of your **Use Cases**—not the underlying business rules (that resides in the Domain) or infrastructure/database concerns. In Morphling 3D, Use Cases interact with repository **Interfaces** (not implementations), which is what allows us to fully mock storage in unit tests.
 
 ---
 
-## **The Goal of Use Case Testing**
-We aren't testing business rules (the Entity does that) or SQL queries (the Infrastructure does that). We are testing the **Orchestration**:
-1. Does the Use Case fetch the correct Entity?
-2. Does it trigger the right Domain method?
-3. Does it call `save()` on the Repository afterward?
+## **Purpose of Application/Use Case Tests**
 
+You are **not** testing:
 
+- Business logic or domain rules (handled in Domain tests).
+- SQL queries or Eloquent logic (handled in Infrastructure tests).
+
+You **are** testing:
+
+1. Does the Use Case load or persist the right entity through the repository?
+2. Does it invoke the expected domain methods and actions?
+3. Is the output/result as expected given certain repository responses?
 
 ---
 
-## **1. Setting Up the Mock**
-Because our Use Cases depend on **Interfaces** (Constructor Injection), we can easily swap a real database implementation for a "Mock" object.
+## **1. Mocking Repository Interfaces**
+
+Because Use Cases receive repository **interfaces** via constructor injection, you can swap the actual implementation for a mock in tests. This is essential for decoupled, fast, and reliable unit tests.
 
 ```php
 namespace Modules\Transaction\Tests\Unit\Application\UseCases;
@@ -31,27 +35,28 @@ class ProcessPaymentUseCaseTest extends TestCase
 {
     public function test_it_updates_and_saves_transaction()
     {
-        // 1. Create a Mock of the Interface
+        // Arrange: Mock the repository interface
         $repository = $this->createMock(TransactionRepositoryInterface::class);
 
-        // 2. Prepare a dummy Entity
+        // Arrange: Prepare a test entity
         $entity = new TransactionEntity(id: 'trx_1', amount: 500, status: 'pending');
 
-        // 3. Define Expectations: findById should return our entity
+        // Repository should find the entity by its ID
         $repository->expects($this->once())
             ->method('findById')
             ->with('trx_1')
             ->willReturn($entity);
 
-        // 4. Define Expectations: save should be called exactly once
+        // Repository should save (persist) the updated entity
         $repository->expects($this->once())
             ->method('save')
             ->with($this->isInstanceOf(TransactionEntity::class));
 
-        // 5. Execute the Use Case
+        // Act: Execute the use case
         $useCase = new ProcessPaymentUseCase($repository);
         $result = $useCase->execute((object)['id' => 'trx_1']);
 
+        // Assert: Outcome signals success
         $this->assertTrue($result['is_success']);
     }
 }
@@ -59,18 +64,19 @@ class ProcessPaymentUseCaseTest extends TestCase
 
 ---
 
-## **2. Testing "Not Found" Scenarios**
-Mocks make it incredibly easy to test edge cases, like what happens when a record doesn't exist in the database.
+## **2. Handling "Not Found" and Edge Cases**
+
+Mocking allows you to easily simulate repository responses like missing data, exceptions, etc.
 
 ```php
 public function test_it_returns_failure_if_transaction_missing()
 {
     $repository = $this->createMock(TransactionRepositoryInterface::class);
 
-    // findById returns null
+    // Simulate: Not found in the repository
     $repository->method('findById')->willReturn(null);
 
-    // save should NEVER be called
+    // save must never be called if nothing is found
     $repository->expects($this->never())->method('save');
 
     $useCase = new ProcessPaymentUseCase($repository);
@@ -83,16 +89,18 @@ public function test_it_returns_failure_if_transaction_missing()
 
 ---
 
-## **Why This is Essential**
+## **Key Benefits**
 
-* **Zero Database Latency:** These tests run in memory. You can run 50 Use Case tests in the time it takes to run one standard Laravel Feature test.
-* **Total Control:** You can force a Repository to throw an exception, return an empty array, or return a specific object to see how your Application handles it.
-* **Decoupled Logic:** You are testing the *logic* of the process, not the *storage* of the data.
+- **In-memory, fast tests:** Completely isolated from the database (no MySQL/Postgres needed).
+- **Full control of dependencies:** Make the repository return whatever you need—entities, `null`, exceptions.
+- **Realistic application flow:** Validate that the Use Case reacts to all possible repository outcomes.
 
 ---
 
-## **Best Practices**
+## **Testing Guidelines**
 
-* **Mock only what you own:** Never mock third-party libraries; mock your own Interfaces.
-* **Keep Assertions Focused:** Test that the Use Case returns the expected result shape (`is_success`, `message`, etc.).
-* **Use `BaseUseCase`:** Ensure your Use Case tests extend a base that handles common shared setup logic if needed.
+- **Mock your own interfaces only** (not 3rd party/vendor code).
+- **Assert use case output, not internals:** Validate results like `is_success`, `message`, or anything returned to the caller.
+- **Share common logic via `BaseUseCaseTest` if needed:** If your use case tests need common setup, create and use a test base class for consistency.
+
+---

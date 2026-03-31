@@ -1,41 +1,42 @@
 # The Application Layer: The Orchestrator
 
-The **Application Layer** serves as the "Director" of your module. It doesn't perform business calculations itself, and it doesn't know how to save data to a database. Instead, it coordinates the movement of data between the outside world (**Delivery**) and the internal logic (**Domain**).
+The **Application Layer** in Morphling 3D is responsible for orchestrating the flow between external requests (**Delivery layer**) and the business logic (**Domain layer**). It does not implement business rules itself, nor does it directly interact with data persistence mechanisms—those responsibilities belong to the Domain and Infrastructure layers, respectively.
 
 ---
 
 ## Executive Summary
-In Morphling 3D, the Application layer is responsible for **Use Cases**. A Use Case represents a single, specific action a user can take (e.g., `PlaceOrder`, `CancelSubscription`, `UpdateProfile`). It is the primary boundary where technical requirements meet business rules.
+
+In Morphling 3D, the Application layer defines **Use Cases**: each Use Case encapsulates exactly one business action in your system (such as `PlaceOrder`, `CancelSubscription`, or `UpdateProfile`). It is the layer where incoming requests are transformed into actions, and results are returned in a predictable format.
 
 > [!NOTE]
-> **Status:** `Orchestration` | **Dependency:** `Points to Domain`
+> **Role:** Orchestration  
+> **Dependencies:** References Domain and Infrastructure (repositories), but is not aware of HTTP or persistence details.
 
 ---
 
-## Key Concepts: The "Workflow Manager"
-Think of the Application layer as a project manager. It takes a task (The DTO), gathers the necessary staff (The Repository), tells them what rules to follow (The Entity), and reports the final result back to the client.
+## Key Concepts: The "Use Case Orchestrator"
 
-
+Think of the Application layer like a workflow manager: it accepts a *DTO* (Data Transfer Object) from the outside world, gathers dependencies (such as repository interfaces), delegates business rules to the *Domain*, and coordinates saving changes by calling *Repositories*. It then returns the result in a stable structure for the **Delivery** layer.
 
 ---
 
 ## What Morphling 3D Generates
 
-Morphling 3D streamlines the creation of these "Directors" and their "Instructions":
+Morphling 3D generates Application layer boilerplate to enforce this separation:
 
-| Command | Generates | Purpose |
-| :--- | :--- | :--- |
-| `module:make-usecase` | `Application/UseCases/*` | The logic for a single specific business action. |
-| `module:make-dto` | `Application/DTOs/*` | A type-safe container for data passing between layers. |
+| Command                  | Generates                      | Purpose                                                         |
+|--------------------------|------------------------------- |-----------------------------------------------------------------|
+| `3d:make-usecase`        | `Application/UseCases/*`       | Implements business use case logic (one Use Case = one class).   |
+| `3d:make-dto`            | `Application/DTOs/*`           | Strongly-typed data transfer between layers (not tied to HTTP).  |
 
 ---
 
-## Technical Reference: The Use Case
+## Technical Reference: Example Use Case
 
-A Use Case typically follows a "Fetch -> Execute -> Save" pattern.
+A typical Use Case follows a "Fetch → Act → Persist" flow. The Use Case calls on the repository (infrastructure interface) to load domain entities, calls entity methods to enforce business rules, then asks the repository to persist the result.
 
 ```php
-### modules/Transaction/Application/UseCases/ProcessPaymentUseCase.php
+// modules/Transaction/Application/UseCases/ProcessPaymentUseCase.php
 
 class ProcessPaymentUseCase extends BaseUseCase
 {
@@ -45,20 +46,20 @@ class ProcessPaymentUseCase extends BaseUseCase
 
     public function execute(mixed $dto = null): array
     {
-        // 1. Extract data from the type-safe DTO
+        // 1. Extract data from the DTO (not from Request, never from Model)
         $transactionId = $dto->id;
 
-        // 2. Fetch the Entity through the Domain Interface
+        // 2. Use repository interface to fetch a domain entity
         $transaction = $this->repository->findById($transactionId);
 
         if (!$transaction) {
             return ['is_success' => false, 'message' => 'Not found'];
         }
 
-        // 3. Trigger a Business Rule inside the Domain Entity
+        // 3. Call domain entity methods to enforce business rules
         $transaction->markAsPaid();
 
-        // 4. Tell the Repository to persist the changed state
+        // 4. Persist state through repository
         $this->repository->save($transaction);
 
         return [
@@ -74,30 +75,34 @@ class ProcessPaymentUseCase extends BaseUseCase
 
 ## Data Transfer Objects (DTOs)
 
-DTOs are critical in Morphling 3D because they prevent the Application layer from depending on HTTP `Request` objects. This allows you to run the same Use Case from a Web Controller, a CLI command, or a background Job.
+DTOs are crucial in the Application layer: they provide a strict boundary and decouple Application code from HTTP or Console layer specifics. This way, the same Use Case can be invoked from controllers, CLI commands, or jobs.
 
 ```php
-// Creating a DTO in the Controller
+// Example: Create a DTO from an HTTP request in a controller
 $dto = TransactionDto::fromRequest($request);
 
-// Passing it to the Use Case
+// Pass DTO into the use case
 $useCase->execute($dto);
 ```
 
 ---
 
-## Best Practices: The "Clean Orchestrator"
+## Best Practices
 
-* **Keep it Thin:** If you see complex `if/else` logic regarding business rules, move that logic into the **Domain Entity**.
-* **One Use Case, One Job:** Avoid "God Use Cases." If a class is handling both `Create` and `Delete`, split them into two separate files.
-* **Result Consistency:** Always return a structured array or a standard Result Object (like the one provided in `modules/Shared`) to keep the **Delivery** layer predictable.
+* **Keep Application Layer Thin**: Any complex business rules or branching logic must be implemented in **Domain Entities** or **Domain Services**, not in Use Cases.
+* **One Use Case, One Responsibility**: Do not combine unrelated operations (e.g., avoid "God Classes").
+* **Stable Return Types**: Always return structured arrays or standard Result Objects (e.g., from `modules/Shared`) to maintain API consistency.
 
 ---
 
-## Troubleshooting
+## Common Pitfalls and Solutions
 
-### "Why can't I just use the Eloquent Model here?"
-If you use Eloquent directly in the Use Case, your application logic becomes "coupled" to the database. By using the `RepositoryInterface`, you can swap the database or mock it during testing without breaking the Use Case.
+### "Can I use Eloquent models in my Use Cases?"
 
-### "My Use Case is getting too large."
-Check if you are doing too much "plumbing." Consider moving complex data mapping into a **Mapper** (Infrastructure) or complex multi-entity logic into a **Domain Service**.
+**No.** Use Cases must depend only on repository interfaces (as defined in Domain), not on any infrastructure-specific classes (like Eloquent or database models). This ensures your logic is persistence-agnostic and easily testable/mocked.
+
+### "My Use Case is getting too big!"
+
+Refactor! If data transformation or mapping becomes complex, introduce a **Mapper** in the Infrastructure layer. If you need cross-entity or workflow logic, consider a **Domain Service**. The Application layer should only coordinate the steps, not implement the internals.
+
+---

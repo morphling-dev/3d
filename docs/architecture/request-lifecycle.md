@@ -1,15 +1,16 @@
 # Request Lifecycle
 
-This guide breaks down the "Path of a Request" within a Morphling 3D module. By following this strict unidirectional flow, your application remains decoupled, testable, and resistant to architectural decay.
+This guide explains the life of a request within a Morphling 3D module, clarifying how adherence to this unidirectional journey keeps your applications decoupled, maintainable, and testable.
 
 ---
 
 ## Executive Summary
-In Morphling 3D, a request is like a traveler passing through a series of checkpoints. Each checkpoint (Layer) has a specific authority:
-* **Delivery** checks your ID (Validation).
-* **Application** decides which room you go to (Orchestration).
-* **Domain** enforces the rules of the house (Business Logic).
-* **Infrastructure** records your visit in the logbook (Persistence).
+
+Morphling 3D breaks a request's path into explicit layers—each with a defined responsibility:
+* **Delivery:** Handles HTTP input, validation, and response logic.
+* **Application:** Orchestrates workflow by coordinating use cases and DTOs.
+* **Domain:** Contains core business rules and logic, isolated from framework and infrastructure.
+* **Infrastructure:** Handles technical details like persistence, third-party APIs, and external services.
 
 > [!NOTE]
 > **Status:** `Core Architecture` | **Flow:** `Unidirectional (Outside-In)`
@@ -18,40 +19,43 @@ In Morphling 3D, a request is like a traveler passing through a series of checkp
 
 ## The Request Journey
 
+### 1. Entry Point: Delivery Layer
 
+The request enters via routes defined at `modules/{Module}/Delivery/Routes/`.
+* **Validation:** A `FormRequest` or custom request class validates input. If validation fails, a `422 Unprocessable Entity` is immediately returned.
+* **Transformation:** The Controller translates the validated request into a DTO (**Data Transfer Object**), ensuring the inner layers never operate on HTTP objects.
 
-### 1. The Entry Point (Delivery)
-The request enters through a route defined in `modules/{Module}/Delivery/Routes/`. 
-* **The Guard:** A `FormRequest` validates the payload. If validation fails, the journey ends here with a `422 Unprocessable Entity`.
-* **The Translator:** The Controller converts the raw `$request` into a **DTO (Data Transfer Object)**. This ensures the inner layers never "see" an HTTP object.
+### 2. Application Layer: Use Case Orchestration
 
-### 2. The Director (Application)
-The Controller invokes the `UseCase::execute(DTO)`. 
-* **The Orchestrator:** The Use Case coordinates the activity. It asks the **Repository** to find an **Entity**, tells the Entity to perform an action, and then tells the Repository to save the result.
+Controllers call a UseCase’s `execute(DTO)` method.
+* **Coordination:** The Use Case directs the workflow—fetching/creating Domain Entities, invoking their behaviors, and saving results via repositories. The Application layer should not contain core business logic.
 
-### 3. The Heart (Domain)
-The Use Case triggers methods on a **Domain Entity**. 
-* **The Rulebook:** This is where pure business logic lives (e.g., `calculateTax()`, `isEligibleForDiscount()`). It has zero knowledge of Laravel, databases, or JSON.
+### 3. Domain Layer: Business Logic
 
-### 4. The Foundation (Infrastructure)
-The Application layer communicates with Infrastructure via **Interfaces**.
-* **The Worker:** The `EloquentRepository` implements the Domain's Interface. It handles the "dirty work" of SQL queries and Eloquent model mapping.
+The Use Case triggers methods on Domain Entities or Domain Services.
+* **Business Logic Only:** The domain layer is free from Laravel details, persistence concerns, or infrastructure dependencies. E.g., methods like `calculateTax()` or rules like `isEligibleForDiscount()` are enforced here.
+
+### 4. Infrastructure Layer: Persistence & External Services
+
+The Application layer relies on interfaces to communicate with infrastructure.
+* **Implementation:** Typically, repositories (e.g., `EloquentRepository`) implement domain interfaces, handling ORM mapping, SQL queries, or external communication. Mappers ensure conversion between domain objects and persistence models.
 
 ---
 
-## Code Implementation: A Real-World View
+## Code Implementation: Typical Example
 
 ### [Layer 1] Delivery: Controller
-The boundary between the web and your logic.
+
+Defines HTTP boundaries and performs initial orchestration.
 
 ```php
 // modules/Transaction/Delivery/Controllers/TransactionController.php
-public function update(UpdateTransactionRequest $request, RenameTransactionUseCase $useCase): JsonResponse 
+public function update(UpdateTransactionRequest $request, RenameTransactionUseCase $useCase): JsonResponse
 {
-    // Step: Request -> DTO
+    // Step 1: Transform HTTP request to DTO
     $dto = TransactionDto::fromRequest($request);
-    
-    // Step: Hand off to Application Layer
+
+    // Step 2: Pass DTO to Application Layer
     $result = $useCase->execute($dto);
 
     return ApiResponse::success($result['data'], $result['message']);
@@ -59,43 +63,50 @@ public function update(UpdateTransactionRequest $request, RenameTransactionUseCa
 ```
 
 ### [Layer 2] Application: Use Case
-The workflow coordinator.
+
+Coordinates domain behavior without embedding business rules or infrastructure calls directly.
 
 ```php
 // modules/Transaction/Application/UseCases/RenameTransactionUseCase.php
 public function execute(mixed $dto = null): array
 {
-    // Step: Dependency Injection of the Interface
+    // Step 1: Use repository interface to fetch the Entity
     $entity = $this->repository->findById($dto->id);
 
-    // Step: Trigger Domain Rule
+    // Step 2: Invoke Domain behavior
     $entity->rename($dto->name);
 
-    // Step: Persist via Infrastructure
+    // Step 3: Save changes through Repository
     $this->repository->save($entity);
 
-    return ['is_success' => true, 'message' => 'Renamed!', 'data' => $entity->toArray()];
+    return [
+        'is_success' => true,
+        'message' => 'Renamed!',
+        'data' => $entity->toArray()
+    ];
 }
 ```
 
 ---
 
-## Comparison: MVC vs. Morphling 3D
+## Comparison: Traditional MVC vs. Morphling 3D
 
-| Feature | Standard Laravel (MVC) | Morphling 3D (DDD) |
-| :--- | :--- | :--- |
-| **Logic Location** | Often in Controller or Model. | Strictly in **Domain Entities**. |
-| **Data Passing** | Raw `$request` or `$array`. | Type-safe **DTOs**. |
-| **DB Interaction** | Direct Eloquent calls everywhere. | Abstracted via **Repositories**. |
-| **Testability** | Hard (requires database/HTTP). | Easy (Unit test the Domain/Use Case). |
+| Feature            | Standard Laravel (MVC)      | Morphling 3D (DDD)                          |
+| :----------------- | :------------------------- | :------------------------------------------ |
+| Logic Location     | Controllers & Models        | Domain Entities & Services                  |
+| Data Transfer      | Mixing raw `$request`/arrays| Explicit DTO classes                        |
+| DB Interaction     | Eloquent everywhere         | Only through injected Repositories          |
+| Testability        | Hard (DB/HTTP-bound tests)  | Easy (Domain & Use Cases are unit-testable) |
 
 ---
 
 ## Troubleshooting the Lifecycle
 
 ### "Why is my Repository returning null?"
+
 > [!WARNING]
-> Check your **Infrastructure Mappers**. If your Eloquent Model exists but the Repository returns null, the Mapper might be failing to convert the Database Row into a Domain Entity.
+> Inspect your **Infrastructure Mappers**. When the database returns a result but the Repository returns null, ensure your Mapper correctly transforms database models to Domain Entities.
 
 ### "Can I call a Use Case from another Use Case?"
-Technically yes, but it is a **Best Practice** to keep Use Cases "flat." If you need shared logic, move that logic into a **Domain Service** or a **Domain Entity** instead of nesting Use Cases.
+
+While technically possible, it's not recommended. Prefer flat Use Cases. If logic needs to be reused, refactor it into a **Domain Service** or a **Domain Entity** method. Avoid chaining Use Cases to preserve independence and clarity between flows.
