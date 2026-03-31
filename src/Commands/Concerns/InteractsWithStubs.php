@@ -18,7 +18,7 @@ trait InteractsWithStubs
     protected function resolveStubPath(string $stub): string
     {
         $stubName = Str::finish($stub, '.stub');
-        $customPath = base_path("stubs/modules/{$stubName}");
+        $customPath = base_path("stubs/morphling-3d/{$stubName}");
 
         if (File::exists($customPath)) {
             return $customPath;
