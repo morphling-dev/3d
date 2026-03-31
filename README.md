@@ -276,7 +276,7 @@ It may be unnecessary for small CRUD-based projects.
 ## Links
 
 * GitHub: [https://github.com/morphling-dev/3d](https://github.com/morphling-dev/3d)
-* Documentation: [https://docs.morphling.dev/3d](https://docs.morphling.dev/3d)
+* Documentation: [https://morphling-3d-docs.vercel.app/](https://morphling-3d-docs.vercel.app/)
 * Issues: [https://github.com/morphling-dev/3d/issues](https://github.com/morphling-dev/3d/issues)
 
 ---
