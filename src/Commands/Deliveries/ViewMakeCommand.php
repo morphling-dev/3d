@@ -11,7 +11,7 @@ class ViewMakeCommand extends BaseGeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'module:make-view {name} {module}';
+    protected $signature = '3d:make-view {name} {module}';
 
     /**
      * The console command description.

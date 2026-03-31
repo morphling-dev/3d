@@ -5,6 +5,8 @@ namespace Morphling\ThreeD;
 use Composer\InstalledVersions;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Route;
 use Morphling\ThreeD\Support\AutoloadManager;
 
 class ThreeDServiceProvider extends ServiceProvider
@@ -21,6 +23,10 @@ class ThreeDServiceProvider extends ServiceProvider
         Commands\DeleteModule::class,
         Commands\ModuleDiscover::class,
         Commands\ModuleList::class,
+        Commands\ModuleMigrateCommand::class,
+        Commands\ModuleRouteCommand::class,
+        Commands\ModuleSeedCommand::class,
+        Commands\ModuleTestCommand::class,
 
         // Application Layer
         Commands\Applications\DtoMakeCommand::class,
@@ -38,7 +44,7 @@ class ThreeDServiceProvider extends ServiceProvider
         Commands\Infrastructures\ExternalMakeCommand::class,
         Commands\Infrastructures\JobMakeCommand::class,
         Commands\Infrastructures\ListenerMakeCommand::class,
-        Commands\Infrastructures\MakeCommand::class, // Console Command generator
+        Commands\Infrastructures\MakeCommand::class,
         Commands\Infrastructures\MapperMakeCommand::class,
         Commands\Infrastructures\ModelMakeCommand::class,
         Commands\Infrastructures\NotificationMakeCommand::class,
@@ -46,6 +52,8 @@ class ThreeDServiceProvider extends ServiceProvider
         Commands\Infrastructures\MigrationMakeCommand::class,
         Commands\Infrastructures\ObserverMakeCommand::class,
         Commands\Infrastructures\ModuleServiceProviderMakeCommand::class,
+        Commands\Infrastructures\FactoryMakeCommand::class,
+        Commands\Infrastructures\SeederMakeCommand::class,
 
         // UI Layer
         Commands\Deliveries\ControllerMakeCommand::class,
@@ -56,7 +64,8 @@ class ThreeDServiceProvider extends ServiceProvider
     ];
 
     /**
-     * Bootstrap any package services including config publishing and console commands.
+     * Bootstrap any package services including config publishing, console commands,
+     * autoloading, view version sharing, and module route registration.
      *
      * @return void
      */
@@ -68,18 +77,21 @@ class ThreeDServiceProvider extends ServiceProvider
                 __DIR__ . '/../config/3d.php' => config_path('3d.php'),
             ], '3d-config');
 
-            // Register All Commands
+            // Register all commands
             $this->commands($this->commands);
         }
 
-        // Register automatic autoloading for modules (Routes, Migrations, etc)
+        // Automatic autoloading for modules (routes, migrations, etc)
         AutoloadManager::register($this);
 
-        // --- VERSION SHARING LOGIC ---
+        // Register all module routes if available
+        $this->registerModuleRoutes();
+
+        // Version sharing for Blade views
         $version = 'dev-main';
 
         try {
-            // Ganti 'morphling-dev/laravel-3d' dengan nama asli package Bapak di composer.json
+            // Use the actual Composer package name for version detection
             if (class_exists(InstalledVersions::class) && InstalledVersions::isInstalled('morphling-dev/3d')) {
                 $version = InstalledVersions::getPrettyVersion('morphling-dev/3d');
             }
@@ -87,15 +99,14 @@ class ThreeDServiceProvider extends ServiceProvider
             $version = '1.0.0-dev';
         }
 
-        // Share ke semua Blade view
+        // Share version to all Blade views
         View::share('threed_version', $version);
     }
 
     /**
-     * Register package services.
+     * Register package services and merge Morphling 3D configuration.
      *
-     * Merges the 3D configuration file so that users can access config('3d')
-     * without needing to publish the configuration first.
+     * Ensures config('3d') is always available, even if not published.
      *
      * @return void
      */
@@ -107,10 +118,10 @@ class ThreeDServiceProvider extends ServiceProvider
     /**
      * Register module migrations from the given path.
      *
-     * @param string $path
+     * @param string $path The absolute path to the migrations directory.
      * @return void
      */
-    public function registerModuleMigrations(string $path)
+    public function registerModuleMigrations(string $path): void
     {
         $this->loadMigrationsFrom($path);
     }
@@ -118,12 +129,58 @@ class ThreeDServiceProvider extends ServiceProvider
     /**
      * Register module views from the given path and namespace.
      *
-     * @param string $path
-     * @param string $namespace
+     * @param string $path      The absolute path to the views directory.
+     * @param string $namespace The namespace for the module views.
      * @return void
      */
-    public function registerModuleViews(string $path, string $namespace)
+    public function registerModuleViews(string $path, string $namespace): void
     {
         $this->loadViewsFrom($path, $namespace);
+    }
+
+    /**
+     * Discover and register API and Web routes for all installed modules.
+     *
+     * Automatically loads routes from each module's Delivery/Routes directory if available.
+     *
+     * @return void
+     */
+    protected function registerModuleRoutes(): void
+    {
+        // Base path to where modules are stored
+        $basePath = base_path('Modules');
+
+        // If the modules directory does not exist, abort route registration
+        if (!File::exists($basePath)) {
+            return;
+        }
+
+        // Iterate through each module directory in the Modules folder
+        foreach (File::directories($basePath) as $modulePath) {
+            $routesPath = $modulePath . DIRECTORY_SEPARATOR . 'Delivery' . DIRECTORY_SEPARATOR . 'Routes';
+
+            // Skip if the module does not contain a Routes directory
+            if (!File::exists($routesPath)) {
+                continue;
+            }
+
+            // Recursively collect all PHP route files inside the Routes directory (supports subfolders, e.g., v1, v2)
+            $routeFiles = File::allFiles($routesPath);
+
+            foreach ($routeFiles as $file) {
+                $fileName = $file->getFilename();
+                $filePath = $file->getRealPath();
+
+                // Register API routes with 'api' middleware if file name matches 'api.php'
+                if ($fileName === 'api.php') {
+                    Route::middleware('api')->group($filePath);
+                }
+
+                // Register Web routes with 'web' middleware if file name matches 'web.php'
+                if ($fileName === 'web.php') {
+                    Route::middleware('web')->group($filePath);
+                }
+            }
+        }
     }
 }

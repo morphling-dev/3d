@@ -3,9 +3,27 @@
 namespace {{ namespace }};
 
 use Modules\Shared\Infrastructure\Models\BaseModel;
+use Modules\{{ module }}\Infrastructure\Database\Factories\{{ module }}Factory;
 
 class {{ class }} extends BaseModel
 {
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = '{{ module_snake_plural }}';
+
+    /**
+     * Create a new factory instance for the model.
+     *
+     * @return \Modules\{{ module }}\Infrastructure\Database\Factories\{{ module }}Factory
+     */
+    protected static function newFactory()
+    {
+        return {{ module }}Factory::new();
+    }
+
     /**
      * The attributes that are mass assignable.
      *

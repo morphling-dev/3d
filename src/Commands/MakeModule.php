@@ -13,7 +13,7 @@ class MakeModule extends Command
      *
      * @var string
      */
-    protected $signature = 'module:new {name}';
+    protected $signature = '3d:new {name}';
 
     /**
      * The console command description.
@@ -47,35 +47,55 @@ class MakeModule extends Command
      */
     protected function generateDefaultFiles(string $module): void
     {
+        $version = 'v1';
+        $moduleName = Str::studly($module);
+
         // Delivery Layer: Controller and Route
-        $this->call('module:make-controller', ['name' => "{$module}Controller", 'module' => $module]);
-        $this->call('module:make-request', ['name' => "Create{$module}Request", 'module' => $module]);
-        $this->call('module:make-resource', ['name' => "{$module}Resource", 'module' => $module]);
-        $this->call('module:make-route', ['name' => 'api', 'module' => $module]);
-        $this->call('module:make-route', ['name' => 'web', 'module' => $module]);
-        $this->call('module:make-view', ['name' => 'index', 'module' => $module]);
-        $this->call('module:make-service', ['name' => "{$module}DomainService", 'module' => $module]);
+        $this->call('3d:make-controller', [
+            'name'   => "Api/{$version}/{$moduleName}Controller",
+            'module' => $module,
+            '--ver'  => $version,
+        ]);
+        $this->call('3d:make-controller', [
+            'name'   => "Web/{$moduleName}Controller",
+            'module' => $module,
+        ]);
+
+        $this->call('3d:make-route', [
+            'name'   => 'api',
+            'module' => $module,
+            '--ver'  => $version
+        ]);
+
+        $this->call('3d:make-route', [
+            'name'   => 'web',
+            'module' => $module
+        ]);
+        $this->call('3d:make-view', ['name' => 'index', 'module' => $module]);
+        $this->call('3d:make-service', ['name' => "{$module}DomainService", 'module' => $module]);
 
         // Application Layer: Use Case
-        $this->call('module:make-usecase', ['name' => "Get{$module}ListUseCase", 'module' => $module]);
-        $this->call('module:make-dto', ['name' => "{$module}Dto", 'module' => $module]);
+        $this->call('3d:make-usecase', ['name' => "Get{$module}ListUseCase", 'module' => $module]);
+        $this->call('3d:make-dto', ['name' => "{$module}Dto", 'module' => $module]);
 
         // Domain Layer: Repository Interface
-        $this->call('module:make-entity', ['name' => "{$module}Entity", 'module' => $module]);
-        $this->call('module:make-interface', ['name' => "{$module}RepositoryInterface", 'module' => $module]);
-        $this->call('module:make-vo', ['name' => "{$module}Status", 'module' => $module]);
-        $this->call('module:make-enum', ['name' => "{$module}Status", 'module' => $module]);
+        $this->call('3d:make-entity', ['name' => "{$module}Entity", 'module' => $module]);
+        $this->call('3d:make-interface', ['name' => "{$module}RepositoryInterface", 'module' => $module]);
+        $this->call('3d:make-vo', ['name' => "{$module}Status", 'module' => $module]);
+        $this->call('3d:make-enum', ['name' => "{$module}StatusEnum", 'module' => $module]);
 
-        // Infrastructure Layer: Model, Repository, Observer, Provider
-        $this->call('module:make-model', ['name' => "{$module}Model", 'module' => $module]);
-        $this->call('module:make-repo', ['name' => "Eloquent{$module}Repository", 'module' => $module]);
-        $this->call('module:make-mapper', ['name' => "{$module}Mapper", 'module' => $module]);
-        $this->call('module:make-observer', ['name' => "{$module}Observer", 'module' => $module]);
-        $this->call('module:make-provider', ['module' => $module]);
-        $this->call('module:make-migration', ['name' => "create_" . Str::snake(Str::plural($module)) . "_table", 'module' => $module]);
-        $this->call('module:make-event', ['name' => "{$module}Created", 'module' => $module]);
-        $this->call('module:make-job', ['name' => "Process{$module}Job", 'module' => $module]);
-        $this->call('module:make-external', ['name' => "{$module}ApiService", 'module' => $module]);
+        // Infrastructure Layer: Model, Repository, Observer, Provider, Factory, Seeder
+        $this->call('3d:make-model', ['name' => "{$module}Model", 'module' => $module]);
+        $this->call('3d:make-repo', ['name' => "Eloquent{$module}Repository", 'module' => $module]);
+        $this->call('3d:make-mapper', ['name' => "{$module}Mapper", 'module' => $module]);
+        $this->call('3d:make-observer', ['name' => "{$module}Observer", 'module' => $module]);
+        $this->call('3d:make-provider', ['module' => $module]);
+        $this->call('3d:make-migration', ['name' => "create_" . Str::snake(Str::plural($module)) . "_table", 'module' => $module]);
+        $this->call('3d:make-event', ['name' => "{$module}Created", 'module' => $module]);
+        $this->call('3d:make-job', ['name' => "Process{$module}Job", 'module' => $module]);
+        $this->call('3d:make-external', ['name' => "{$module}ApiService", 'module' => $module]);
+        $this->call('3d:make-factory', ['name' => "{$module}Factory", 'module' => $module]);
+        $this->call('3d:make-seeder', ['name' => "{$module}Seeder", 'module' => $module]);
 
         $this->info("All layers for module {$module} have been generated.");
     }

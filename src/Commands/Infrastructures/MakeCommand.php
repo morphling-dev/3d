@@ -11,7 +11,7 @@ class MakeCommand extends BaseGeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'module:make-command {name} {module}';
+    protected $signature = '3d:make-command {name} {module}';
 
     /**
      * The description of the console command.

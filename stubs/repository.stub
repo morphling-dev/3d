@@ -4,6 +4,7 @@ namespace {{ namespace }};
 
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Builder;
 use Modules\{{ module }}\Domain\Repositories\{{ module }}RepositoryInterface;
 use Modules\{{ module }}\Domain\Entities\{{ module }}Entity;
 use Modules\{{ module }}\Infrastructure\Models\{{ module }}Model;
@@ -30,9 +31,9 @@ class {{ class }} implements {{ module }}RepositoryInterface
     /**
      * Get a new base query builder for the model.
      *
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return Builder
      */
-    protected function query()
+    protected function query(): Builder
     {
         return $this->model->newQuery();
     }
@@ -75,6 +76,53 @@ class {{ class }} implements {{ module }}RepositoryInterface
     }
 
     /**
+     * List entities with optional filters for status, search, limit, columns, and order.
+     *
+     * @param  string|null $status
+     * @param  int|null    $limit
+     * @param  string|null $search
+     * @param  array       $columns
+     * @param  string|null $orderBy
+     * @param  string      $direction
+     * @return Collection<int, {{ module }}Entity>
+     */
+    public function list(
+        ?string $status = null,
+        ?int $limit = null,
+        ?string $search = null,
+        array $columns = ['*'],
+        ?string $orderBy = null,
+        string $direction = 'asc'
+    ): Collection {
+        $query = $this->query();
+
+        // Filter by status if provided
+        if ($status !== null) {
+            $query->where('status', $status);
+        }
+
+        // Apply search if provided (assumes 'name' attribute, modify if necessary)
+        if ($search !== null) {
+            $query->where('name', 'like', '%' . $search . '%');
+        }
+
+        // Apply ordering if specified
+        if ($orderBy !== null) {
+            $query->orderBy($orderBy, $direction);
+        }
+
+        // Limit results if a limit is given
+        if ($limit !== null) {
+            $query->limit($limit);
+        }
+
+        // Retrieve and transform results to domain entities
+        return $query
+            ->get($columns)
+            ->map(fn($model) => $model->toDomain());
+    }
+
+    /**
      * Find entities by specific conditions.
      *
      * @param  array  $conditions
@@ -104,11 +152,18 @@ class {{ class }} implements {{ module }}RepositoryInterface
      * Get paginated entities.
      *
      * @param  int  $perPage
+     * @param  array  $conditions
      * @return LengthAwarePaginator
      */
-    public function paginate(int $perPage = 15): LengthAwarePaginator
+    public function paginate(int $perPage = 15, array $conditions = []): LengthAwarePaginator
     {
-        $paginator = $this->query()->paginate($perPage);
+        $query = $this->query();
+
+        if (!empty($conditions)) {
+            $query->where($conditions);
+        }
+
+        $paginator = $query->paginate($perPage);
         $paginator->getCollection()->transform(fn($model) => $model->toDomain());
         return $paginator;
     }
@@ -142,13 +197,73 @@ class {{ class }} implements {{ module }}RepositoryInterface
     }
 
     /**
-     * Delete an entity by its identifier.
+     * Delete an entity by its identifier (soft delete if enabled).
      *
      * @param  int|string  $id
      * @return bool
      */
     public function delete(int|string $id): bool
     {
-        return $this->query()->where('id', $id)->delete() > 0;
+        $model = $this->query()->find($id);
+        if ($model) {
+            return $model->delete() !== false;
+        }
+        return false;
+    }
+
+    /**
+     * Force delete an entity by its identifier (removes from DB even if soft deletes enabled).
+     *
+     * @param  int|string $id
+     * @return bool
+     */
+    public function forceDelete(int|string $id): bool
+    {
+        $model = $this->query()->withTrashed()->find($id);
+        if ($model) {
+            return $model->forceDelete() !== false;
+        }
+        return false;
+    }
+
+    /**
+     * Restore a soft-deleted entity by its identifier.
+     *
+     * @param  int|string $id
+     * @return bool
+     */
+    public function restore(int|string $id): bool
+    {
+        $model = $this->query()->withTrashed()->find($id);
+        if ($model && method_exists($model, 'restore')) {
+            return $model->restore() !== false;
+        }
+        return false;
+    }
+
+    /**
+     * Check if entity exists by specific conditions.
+     *
+     * @param array $conditions
+     * @return bool
+     */
+    public function exists(array $conditions): bool
+    {
+        return $this->query()->where($conditions)->exists();
+    }
+
+    /**
+     * Count entities (optionally by conditions).
+     *
+     * @param  array  $conditions
+     * @return int
+     */
+    public function count(array $conditions = []): int
+    {
+        $query = $this->query();
+        if (!empty($conditions)) {
+            $query->where($conditions);
+        }
+        return $query->count();
     }
 }

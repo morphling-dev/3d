@@ -18,17 +18,18 @@ trait HasModuleVars
         'route'         => 'Delivery/Routes',
         'view'          => 'Delivery/Views',
 
-        // Domain Layer (Core Business)
+        // Domain Layer
         'entity'        => 'Domain/Entities',
-        'vo'            => 'Domain/ValueObjects',
+        'value_object'  => 'Domain/ValueObjects',
         'service'       => 'Domain/Services',
-        'interface'     => 'Domain/Repositories',
+        'interface'     => 'Domain/Interfaces',
+        'enum'          => 'Domain/Enums',
 
-        // Application Layer (Orchestration)
+        // Application Layer
         'use_case'      => 'Application/UseCases',
         'dto'           => 'Application/DTOs',
 
-        // Infrastructure Layer (Technical Details)
+        // Infrastructure Layer
         'model'         => 'Infrastructure/Models',
         'repository'    => 'Infrastructure/Repositories',
         'mapper'        => 'Infrastructure/Mappers',
@@ -38,10 +39,11 @@ trait HasModuleVars
         'notification'  => 'Infrastructure/Notifications',
         'command'       => 'Infrastructure/Commands',
         'external'      => 'Infrastructure/External',
-        'observer'      => 'Infrastructure/Database/Observers',
+        'observer'      => 'Infrastructure/Observers',
         'provider'      => 'Infrastructure/Providers',
-        // Migration is not explicitly in the config namespaces but often used in infra:
         'migration'     => 'Infrastructure/Database/Migrations',
+        'factory'       => 'Infrastructure/Database/Factories',
+        'seeder'        => 'Infrastructure/Database/Seeders',
     ];
 
     /**

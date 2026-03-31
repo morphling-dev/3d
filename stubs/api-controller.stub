@@ -1,0 +1,151 @@
+<?php
+
+namespace {{ namespace }};
+
+use App\Http\Controllers\Controller;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\JsonResponse;
+use Modules\Shared\Infrastructure\Constants\HttpStatus;
+use Modules\Shared\Infrastructure\Helpers\ApiResponse;
+use Modules\Shared\Infrastructure\Transformers\PaginationTransformer;
+use {{ baseModule }}\Application\DTOs\Create{{ resource }}DTO;
+use {{ baseModule }}\Application\DTOs\Get{{ resource }}ListDTO;
+use {{ baseModule }}\Application\DTOs\Update{{ resource }}DTO;
+use {{ baseModule }}\Application\UseCases\Create{{ resource }}UseCase;
+use {{ baseModule }}\Application\UseCases\Get{{ resource }}DetailUseCase;
+use {{ baseModule }}\Application\UseCases\Get{{ resource }}ListUseCase;
+use {{ baseModule }}\Application\UseCases\Update{{ resource }}UseCase;
+use {{ baseModule }}\Application\UseCases\Delete{{ resource }}UseCase;
+use {{ baseModule }}\Delivery\Requests\V{{ version }}\Create{{ resource }}Request;
+use {{ baseModule }}\Delivery\Requests\V{{ version }}\Get{{ resource }}ListRequest;
+use {{ baseModule }}\Delivery\Requests\V{{ version }}\Update{{ resource }}Request;
+use {{ baseModule }}\Delivery\Resources\V{{ version }}\{{ resource }}Resource;
+
+class {{ class }} extends Controller
+{
+    public function __construct(
+        protected Get{{ resource }}ListUseCase $listUseCase,
+        protected Get{{ resource }}DetailUseCase $detailUseCase,
+        protected Create{{ resource }}UseCase $createUseCase,
+        protected Update{{ resource }}UseCase $updateUseCase,
+        protected Delete{{ resource }}UseCase $deleteUseCase,
+    ) {}
+
+    /**
+     * Retrieve a paginated list of resources.
+     *
+     * @param  Get{{ resource }}ListRequest $request
+     * @return JsonResponse
+     */
+    public function index(Get{{ resource }}ListRequest $request): JsonResponse
+    {
+        $dto = Get{{ resource }}ListDTO::fromArray($request->validated());
+        $result = $this->listUseCase->execute($dto);
+        $paginator = $result['data'];
+
+        return ApiResponse::success(
+            data: {{ resource }}Resource::collection($paginator->items()),
+            message: $result['message'],
+            meta: PaginationTransformer::transform($paginator)
+        );
+    }
+
+    /**
+     * Retrieve a specific resource by its ID.
+     *
+     * @param  int  $id
+     * @return JsonResponse
+     */
+    public function show(int $id): JsonResponse
+    {
+        try {
+            $result = $this->detailUseCase->execute($id);
+
+            return ApiResponse::success(
+                data: new {{ resource }}Resource($result['data']),
+                message: $result['message']
+            );
+        } catch (ModelNotFoundException $e) {
+            return ApiResponse::error(
+                message: $e->getMessage(),
+                code: HttpStatus::NOT_FOUND->value
+            );
+        }
+    }
+
+    /**
+     * Store a newly created resource.
+     *
+     * @param  Create{{ resource }}Request  $request
+     * @return JsonResponse
+     */
+    public function store(Create{{ resource }}Request $request): JsonResponse
+    {
+        $dto = Create{{ resource }}DTO::fromArray($request->validated());
+        $result = $this->createUseCase->execute($dto);
+
+        return ApiResponse::success(
+            data: new {{ resource }}Resource($result['data']),
+            message: $result['message'],
+            code: HttpStatus::CREATED->value
+        );
+    }
+
+    /**
+     * Update an existing resource.
+     *
+     * @param  Update{{ resource }}Request  $request
+     * @param  int  $id
+     * @return JsonResponse
+     */
+    public function update(Update{{ resource }}Request $request, int $id): JsonResponse
+    {
+        try {
+            $dto = Update{{ resource }}DTO::fromArray($request->validated(), $id);
+            $result = $this->updateUseCase->execute($dto);
+
+            return ApiResponse::success(
+                data: new {{ resource }}Resource($result['data']),
+                message: $result['message']
+            );
+        } catch (ModelNotFoundException $e) {
+            return ApiResponse::error(
+                message: $e->getMessage(),
+                code: HttpStatus::NOT_FOUND->value
+            );
+        } catch (\Exception $e) {
+            return ApiResponse::error(
+                message: $e->getMessage(),
+                code: HttpStatus::BAD_REQUEST->value
+            );
+        }
+    }
+
+    /**
+     * Remove a resource by its ID.
+     *
+     * @param  int  $id
+     * @return JsonResponse
+     */
+    public function destroy(int $id): JsonResponse
+    {
+        try {
+            $result = $this->deleteUseCase->execute($id);
+
+            return ApiResponse::success(
+                null,
+                $result['message']
+            );
+        } catch (ModelNotFoundException $e) {
+            return ApiResponse::error(
+                $e->getMessage(),
+                HttpStatus::NOT_FOUND->value
+            );
+        } catch (\Exception $e) {
+            return ApiResponse::error(
+                $e->getMessage(),
+                HttpStatus::BAD_REQUEST->value
+            );
+        }
+    }
+}

@@ -11,7 +11,7 @@ class ModuleServiceProviderMakeCommand extends BaseGeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'module:make-provider {module}';
+    protected $signature = '3d:make-provider {module}';
 
     /**
      * The console command description.

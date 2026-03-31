@@ -11,7 +11,7 @@ class ServiceMakeCommand extends BaseGeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'module:make-service {name} {module}';
+    protected $signature = '3d:make-service {name} {module}';
 
     /**
      * The console command description.

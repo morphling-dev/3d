@@ -11,7 +11,7 @@ class DtoMakeCommand extends BaseGeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'module:make-dto {name} {module}';
+    protected $signature = '3d:make-dto {name} {module}';
 
     /**
      * The type of class being generated.

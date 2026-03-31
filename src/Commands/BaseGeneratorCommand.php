@@ -33,15 +33,22 @@ abstract class BaseGeneratorCommand extends GeneratorCommand
     /**
      * Build the fully qualified class name including the module namespace.
      *
-     * @param  string $name The class name argument.
+     * Flexible so that sub-folder/sub-namespace (like Api/V1/BlogController)
+     * given via the $name argument will be honored and properly namespaced.
+     *
+     * @param  string $name The class name argument, possibly including sub-folder(s).
      * @return string The fully qualified class name within the module namespace.
      */
     protected function qualifyClass($name): string
     {
-        $cleanName = ltrim($name, '\\/');
+        $name = ltrim($name, '\\/'); // clean leading slashes
         $module = $this->argument('module');
 
-        return $this->getLayerNamespace($module, Str::snake($this->type)) . '\\' . $cleanName;
+        // Laravel convention: if $name contains slash (Api/V1/BlogController), allow subnamespace.
+        // Replace forward slashes to namespace separator
+        $rootNamespace = $this->getLayerNamespace($module, Str::snake($this->type));
+
+        return $rootNamespace . '\\' . str_replace('/', '\\', $name);
     }
 
     /**
@@ -99,27 +106,18 @@ abstract class BaseGeneratorCommand extends GeneratorCommand
     }
 
     /**
-     * Determine the default namespace for the generated class based on module and type configuration.
+     * Get the default namespace for the generated class.
      *
-     * @param  string $rootNamespace The application's root namespace.
-     * @return string The resolved default namespace for the generated class.
+     * Determines the base namespace for the class using the given module and type information.
+     * Deeper subnamespaces (e.g., Api, V1, etc.) should be provided via the $name argument in qualifyClass.
+     *
+     * @param  string  $rootNamespace  The application's root namespace.
+     * @return string  The resolved default namespace for the generated class.
      */
     protected function getDefaultNamespace($rootNamespace): string
     {
-        $details = $this->getModuleInfo($this->argument('module'));
-
-        // SINKRONISASI: Ubah dash (-) jadi underscore (_) agar match dengan config
-        $configKey = str_replace('-', '_', $this->type);
-
-        $subNamespace = config("3d.namespaces.{$configKey}");
-
-        if (!$subNamespace) {
-            // Fallback: Studly Plural (contoh: use_case -> UseCases)
-            $subNamespace = Str::studly(Str::plural($configKey));
-        }
-
-        $subNamespace = str_replace(['/', ' '], '\\', trim($subNamespace, '\\/ '));
-
-        return $details['root_namespace'] . '\\' . $subNamespace;
+        $module = $this->argument('module');
+        // Only return the base layer namespace; deeper namespaces are handled in qualifyClass.
+        return $this->getLayerNamespace($module, Str::snake($this->type));
     }
 }

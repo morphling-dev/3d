@@ -11,7 +11,7 @@ class JobMakeCommand extends BaseGeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'module:make-job {name} {module}';
+    protected $signature = '3d:make-job {name} {module}';
 
     /**
      * The console command description.

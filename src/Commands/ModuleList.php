@@ -13,7 +13,7 @@ class ModuleList extends Command
      *
      * @var string
      */
-    protected $signature = 'module:list';
+    protected $signature = '3d:list';
 
     /**
      * The console command description.
@@ -39,7 +39,7 @@ class ModuleList extends Command
         $directories = File::directories($modulesPath);
 
         if (empty($directories)) {
-            $this->info("Empty project. Run 'php artisan module:new' to get started.");
+            $this->info("Empty project. Run 'php artisan 3d:new' to get started.");
             return;
         }
 

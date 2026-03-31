@@ -11,7 +11,7 @@ class ObserverMakeCommand extends BaseGeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'module:make-observer {name} {module}';
+    protected $signature = '3d:make-observer {name} {module}';
 
     /**
      * The console command description.

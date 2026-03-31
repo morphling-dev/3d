@@ -35,7 +35,7 @@ class InstallCommand extends Command
         $this->initializeSharedModule();
         $this->updateComposerAutoload();
 
-        $this->info('Installation complete! You can now run: php artisan module:new [ModuleName]');
+        $this->info('Installation complete! You can now run: php artisan 3d:new [ModuleName]');
 
         return Command::SUCCESS;
     }

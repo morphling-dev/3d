@@ -2,36 +2,19 @@
 
 namespace {{ namespace }};
 
-use Illuminate\Support\ServiceProvider;
-use {{ root_namespace }}\Domain\Repositories\{{ module }}RepositoryInterface;
-use {{ root_namespace }}\Infrastructure\Repositories\Eloquent{{ module }}Repository;
-use {{ root_namespace }}\Infrastructure\Models\{{ module }}Model;
-use {{ root_namespace }}\Infrastructure\Database\Observers\{{ module }}Observer;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 
-class {{ class }} extends ServiceProvider
+class {{ class }} extends JsonResource
 {
     /**
-     * Register any module services.
+     * Transform the resource into an array.
+     *
+     * @param  Request  $request
+     * @return array
      */
-    public function register(): void
+    public function toArray(Request $request): array
     {
-        // Bind Repository Interface to Eloquent Implementation
-        $this->app->bind(
-            {{ module }}RepositoryInterface::class,
-            Eloquent{{ module }}Repository::class
-        );
-    }
-
-    /**
-     * Bootstrap any module services.
-     */
-    public function boot(): void
-    {
-        // Register Observer for the Model
-        if (class_exists({{ module }}Observer::class)) {
-            {{ module }}Model::observe({{ module }}Observer::class);
-        }
-        
-        // Load additional module resources if needed
+        return $this->resource->toArray();
     }
 }

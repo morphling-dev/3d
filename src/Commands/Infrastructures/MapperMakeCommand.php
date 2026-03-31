@@ -11,7 +11,7 @@ class MapperMakeCommand extends BaseGeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'module:make-mapper {name} {module}';
+    protected $signature = '3d:make-mapper {name} {module}';
 
     /**
      * The console command description.

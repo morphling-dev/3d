@@ -15,7 +15,7 @@ class ApiResponse
      * @param  int          $code     The HTTP status code. Defaults to HttpStatus::OK.
      * @return JsonResponse           The JSON response object with success indicator.
      */
-    public static function success(mixed $data = null, ?string $message = 'Success', int $code = HttpStatus::OK): JsonResponse
+    public static function success(mixed $data = null, ?string $message = 'Success', int $code = HttpStatus::OK->value): JsonResponse
     {
         return response()->json([
             'is_success' => true,
@@ -32,7 +32,7 @@ class ApiResponse
      * @param  mixed|null   $errors   Additional error details, if any.
      * @return JsonResponse           The JSON response object with error indicator.
      */
-    public static function error(string $message = 'Error', int $code = HttpStatus::BAD_REQUEST, mixed $errors = null): JsonResponse
+    public static function error(string $message = 'Error', int $code = HttpStatus::BAD_REQUEST->value, mixed $errors = null): JsonResponse
     {
         return response()->json([
             'is_success' => false,

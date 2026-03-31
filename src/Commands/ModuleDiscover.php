@@ -12,7 +12,7 @@ class ModuleDiscover extends Command
      *
      * @var string
      */
-    protected $signature = 'module:discover';
+    protected $signature = '3d:discover';
 
     /**
      * The description of the console command.

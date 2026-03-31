@@ -12,7 +12,7 @@ class MigrationMakeCommand extends BaseGeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'module:make-migration {name} {module}';
+    protected $signature = '3d:make-migration {name} {module}';
 
     /**
      * The console command description.

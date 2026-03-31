@@ -5,33 +5,30 @@ namespace {{ namespace }};
 readonly class {{ class }}
 {
     /**
-     * The validated data.
+     * Data Transfer Object for query filters.
      *
-     * @var array
+     * @param  string|null  $status  The status filter (optional).
+     * @param  int  $limit  The maximum number of items to return (default: 10).
+     * @param  string|null  $search  The search keyword (optional).
      */
-    public array $data;
+    public function __construct(
+        public ?string $status = null,
+        public int $limit = 10,
+        public ?string $search = null,
+    ) {}
 
     /**
-     * Create a new {{ class }} instance.
+     * Create a DTO instance from an array of data.
      *
-     * @param  array  $data  The validated data.
-     * @return void
+     * @param  array  $data  The input data, usually from a request or other source.
+     * @return self  A new instance of the data transfer object.
      */
-    public function __construct(array $data)
+    public static function fromArray(array $data): self
     {
-        $this->data = $data;
-    }
-
-    /**
-     * Create a new instance from a request.
-     *
-     * @param  mixed  $request  The request containing validated data.
-     * @return static  An instance of the DTO.
-     */
-    public static function fromRequest(mixed $request): static
-    {
-        return new static(
-            $request->validated(),
+        return new self(
+            $data['status'] ?? null,
+            isset($data['limit']) ? (int) $data['limit'] : 10,
+            $data['search'] ?? null
         );
     }
 }

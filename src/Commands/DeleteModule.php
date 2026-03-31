@@ -14,7 +14,7 @@ class DeleteModule extends Command
      *
      * @var string
      */
-    protected $signature = 'module:delete {name}';
+    protected $signature = '3d:delete {name}';
 
     /**
      * The console command description.

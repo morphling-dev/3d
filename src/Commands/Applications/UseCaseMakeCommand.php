@@ -11,7 +11,7 @@ class UseCaseMakeCommand extends BaseGeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'module:make-usecase {name} {module}';
+    protected $signature = '3d:make-usecase {name} {module}';
 
     /**
      * The type of class being generated.

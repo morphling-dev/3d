@@ -2,37 +2,41 @@
 
 namespace {{ namespace }};
 
+use Modules\{{ module }}\Domain\Entities\{{ module }}Entity;
+
 class {{ class }}
 {
     /**
      * Map an Infrastructure Model object to a Domain Entity object.
      *
      * @param  object  $raw  The raw object from the infrastructure or persistence layer.
-     * @return object  The mapped domain entity object.
+     * @return {{ module }}Entity  The mapped domain entity object.
      */
-    public static function toDomain(object $raw): object
+    public static function toDomain(object $raw): {{ module }}Entity
     {
-        // TODO: Replace with actual mapping logic based on domain entity structure.
-        $entity = new \stdClass();
-        // Example mapping:
-        // $entity->id = $raw->id ?? null;
-        // $entity->name = $raw->name ?? null;
-        return $entity;
+        return new {{ module }}Entity(
+            $raw->id ?? null,
+            $raw->name ?? null,
+            $raw->status ?? null,
+            isset($raw->created_at) ? new \DateTime($raw->created_at) : null,
+            isset($raw->updated_at) ? new \DateTime($raw->updated_at) : null
+        );
     }
 
     /**
      * Map a Domain Entity object to an array suitable for Eloquent persistence.
      *
-     * @param  object  $entity  The domain entity object to be persisted.
+     * @param  {{ module }}Entity  $entity  The domain entity object to be persisted.
      * @return array  The mapped array for Eloquent model.
      */
-    public static function toPersistence(object $entity): array
+    public static function toPersistence({{ module }}Entity $entity): array
     {
-        // TODO: Replace with actual mapping logic based on entity properties and persistence requirements.
-        $data = [];
-        // Example mapping:
-        // $data['id'] = $entity->id ?? null;
-        // $data['name'] = $entity->name ?? null;
-        return $data;
+        return [
+            'id' => $entity->getId(),
+            'name' => $entity->getName(),
+            'status' => $entity->getStatus(),
+            'created_at' => $entity->getCreatedAt() ? $entity->getCreatedAt()->format('Y-m-d H:i:s') : null,
+            'updated_at' => $entity->getUpdatedAt() ? $entity->getUpdatedAt()->format('Y-m-d H:i:s') : null,
+        ];
     }
 }

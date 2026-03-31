@@ -19,22 +19,24 @@ class {{ class }} extends BaseUseCase
     }
 
     /**
-     * Execute the use case logic.
+     * Execute the use case logic to retrieve transaction list data.
      *
-     * @param  mixed|null  $dto  Data transfer object to execute the use case.
-     * @return array  Response indicating the status and module.
+     * @param  mixed|null  $dto  Data transfer object containing filtering parameters (status, limit, search).
+     * @return array  Response indicating the status and containing the transactions data.
      */
     public function execute(mixed $dto = null): array
     {
-        // Business Logic starts here
-        
+        // UseCase expects $dto to have 'status', 'limit', and 'search' properties
+        $transactions = $this->repository->list(
+            status: $dto->status,
+            limit: $dto->limit,
+            search: $dto->search
+        );
+
         return [
             'is_success' => true,
-            'message'    => 'Execution successful for {{ module }}',
-            'data'       => [
-                'module' => '{{ module }}',
-                'action' => '{{ class }}',
-            ],
+            'message'    => 'Data retrieved successfully',
+            'data'       => $transactions,
         ];
     }
 }

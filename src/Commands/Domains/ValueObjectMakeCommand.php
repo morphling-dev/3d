@@ -11,7 +11,7 @@ class ValueObjectMakeCommand extends BaseGeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'module:make-vo {name} {module}';
+    protected $signature = '3d:make-vo {name} {module}';
 
     /**
      * The console command description.

@@ -11,7 +11,7 @@ class RepositoryMakeCommand extends BaseGeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'module:make-repo {name} {module}';
+    protected $signature = '3d:make-repo {name} {module}';
 
     /**
      * The console command description.

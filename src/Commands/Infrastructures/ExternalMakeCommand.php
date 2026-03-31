@@ -11,7 +11,7 @@ class ExternalMakeCommand extends BaseGeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'module:make-external {name} {module}';
+    protected $signature = '3d:make-external {name} {module}';
 
     /**
      * The console command description.

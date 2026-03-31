@@ -2,16 +2,16 @@
 
 namespace {{ namespace }};
 
-use {{ root_namespace }}\Domain\Entities\{{ module }}Entity;
-use Illuminate\Support\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
+use {{ root_namespace }}\Domain\Entities\{{ module }}Entity;
 
 interface {{ class }}
 {
     /**
      * Find an entity by its identifier.
      *
-     * @param int|string $id
+     * @param  int|string  $id
      * @return {{ module }}Entity|null
      */
     public function findById(int|string $id): ?{{ module }}Entity;
@@ -31,9 +31,29 @@ interface {{ class }}
     public function allAsCollection(): Collection;
 
     /**
+     * List entities with optional filters for status, search, and limit, plus columns and order.
+     *
+     * @param  string|null $status
+     * @param  int|null    $limit
+     * @param  string|null $search
+     * @param  array       $columns
+     * @param  string|null $orderBy
+     * @param  string      $direction
+     * @return Collection<int, {{ module }}Entity>
+     */
+    public function list(
+        ?string $status = null,
+        ?int $limit = null,
+        ?string $search = null,
+        array $columns = ['*'],
+        ?string $orderBy = null,
+        string $direction = 'asc'
+    ): Collection;
+
+    /**
      * Find entities by specific conditions.
      *
-     * @param array $conditions
+     * @param  array  $conditions
      * @return Collection<int, {{ module }}Entity>
      */
     public function findBy(array $conditions): Collection;
@@ -41,7 +61,7 @@ interface {{ class }}
     /**
      * Find the first entity by specific conditions.
      *
-     * @param array $conditions
+     * @param  array  $conditions
      * @return {{ module }}Entity|null
      */
     public function findOneBy(array $conditions): ?{{ module }}Entity;
@@ -49,15 +69,16 @@ interface {{ class }}
     /**
      * Get paginated entities.
      *
-     * @param int $perPage
+     * @param  int  $perPage
+     * @param  array  $conditions
      * @return LengthAwarePaginator
      */
-    public function paginate(int $perPage = 15): LengthAwarePaginator;
+    public function paginate(int $perPage = 15, array $conditions = []): LengthAwarePaginator;
 
     /**
      * Save a new entity.
      *
-     * @param {{ module }}Entity $entity
+     * @param  {{ module }}Entity  $entity
      * @return bool
      */
     public function save({{ module }}Entity $entity): bool;
@@ -65,17 +86,49 @@ interface {{ class }}
     /**
      * Update an entity by its identifier.
      *
-     * @param int|string $id
-     * @param array $data
+     * @param  int|string  $id
+     * @param  array  $data
      * @return bool
      */
     public function update(int|string $id, array $data): bool;
 
     /**
-     * Delete an entity by its identifier.
+     * Delete an entity by its identifier (soft delete if enabled).
      *
-     * @param int|string $id
+     * @param  int|string  $id
      * @return bool
      */
     public function delete(int|string $id): bool;
+
+    /**
+     * Force delete an entity by its identifier (removes from DB even if soft deletes enabled).
+     *
+     * @param  int|string $id
+     * @return bool
+     */
+    public function forceDelete(int|string $id): bool;
+
+    /**
+     * Restore a soft-deleted entity by its identifier.
+     *
+     * @param  int|string $id
+     * @return bool
+     */
+    public function restore(int|string $id): bool;
+
+    /**
+     * Check if entity exists by specific conditions.
+     *
+     * @param array $conditions
+     * @return bool
+     */
+    public function exists(array $conditions): bool;
+
+    /**
+     * Count entities (optionally by conditions).
+     *
+     * @param  array  $conditions
+     * @return int
+     */
+    public function count(array $conditions = []): int;
 }

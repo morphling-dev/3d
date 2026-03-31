@@ -11,7 +11,7 @@ class EventMakeCommand extends BaseGeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'module:make-event {name} {module}';
+    protected $signature = '3d:make-event {name} {module}';
 
     /**
      * The console command description.

@@ -11,7 +11,7 @@ class EnumMakeCommand extends BaseGeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'module:make-enum {name} {module}';
+    protected $signature = '3d:make-enum {name} {module}';
 
     /**
      * The console command description.

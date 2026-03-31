@@ -1,5 +1,8 @@
 AI AGENT GUIDELINE FOR WRITING METHODS (PHP/Laravel Context)
 
+// Core Principle:
+// Always write code that is effective and maintainable, while remaining easy to understand for developers at a mid to senior experience level. Prioritize code clarity and simplicity, avoiding unnecessary complexity even when optimizing for effectiveness.
+
 1. Method Purpose:
    - Clearly state or infer the intent of the method before writing.
    - Use the docblock as a reference if provided and always document each method appropriately.
@@ -66,10 +69,16 @@ AI AGENT GUIDELINE FOR WRITING METHODS (PHP/Laravel Context)
    - Organize arguments, array items, and return structures for clarity and readability.
 
 10. Readability & Clarity:
+    - Write code that is easy for mid and senior developers to understand.
     - Group related logic together and avoid unnecessary nesting.
     - Add comments to explain complex or non-obvious logic or business rules, but avoid redundant comments.
 
-11. Emoji Usage:
+11. Effectiveness & Simplicity:
+    - Strive for code that is efficient in logic and execution but prioritizes clarity.
+    - Always ensure code is maintainable; avoid overengineering or premature optimization.
+    - Prefer straightforward solutions that can easily be understood, reviewed, and extended by other developers.
+
+12. Emoji Usage:
     - Do not use emojis anywhere in the code, comments, docblocks, method names, or output. Emojis are strictly prohibited.
 
-Apply these guidelines whenever you are generating a new method or property within a PHP/Laravel codebase.
+Apply these guidelines whenever you generate a new method or property within a PHP/Laravel codebase.

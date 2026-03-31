@@ -11,7 +11,7 @@ class InterfaceMakeCommand extends BaseGeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'module:make-interface {name} {module}';
+    protected $signature = '3d:make-interface {name} {module}';
 
     /**
      * The description of the console command.

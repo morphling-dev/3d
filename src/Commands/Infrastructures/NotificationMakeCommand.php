@@ -11,7 +11,7 @@ class NotificationMakeCommand extends BaseGeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'module:make-notification {name} {module}';
+    protected $signature = '3d:make-notification {name} {module}';
 
     /**
      * The console command description.

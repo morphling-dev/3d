@@ -11,7 +11,7 @@ class ListenerMakeCommand extends BaseGeneratorCommand
      *
      * @var string
      */
-    protected $signature = 'module:make-listener {name} {module}';
+    protected $signature = '3d:make-listener {name} {module}';
 
     /**
      * The console command description.
