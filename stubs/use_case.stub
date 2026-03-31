@@ -1,0 +1,42 @@
+<?php
+
+namespace {{ namespace }};
+
+use Modules\Shared\Application\UseCases\BaseUseCase;
+use {{ root_namespace }}\Domain\Repositories\{{ module }}RepositoryInterface;
+
+class {{ class }} extends BaseUseCase
+{
+    /**
+     * {{ class }} constructor.
+     *
+     * @param {{ module }}RepositoryInterface $repository
+     */
+    public function __construct(
+        protected {{ module }}RepositoryInterface $repository
+    ) {
+        // Dependency injected via interface for Decoupling
+    }
+
+    /**
+     * Execute the use case logic to retrieve transaction list data.
+     *
+     * @param  mixed|null  $dto  Data transfer object containing filtering parameters (status, limit, search).
+     * @return array  Response indicating the status and containing the transactions data.
+     */
+    public function execute(mixed $dto = null): array
+    {
+        // UseCase expects $dto to have 'status', 'limit', and 'search' properties
+        $transactions = $this->repository->list(
+            status: $dto->status,
+            limit: $dto->limit,
+            search: $dto->search
+        );
+
+        return [
+            'is_success' => true,
+            'message'    => 'Data retrieved successfully',
+            'data'       => $transactions,
+        ];
+    }
+}

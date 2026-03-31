@@ -1,0 +1,23 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use {{ controllerNamespace }}\{{ controllerClass }};
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - {{ version }}
+|--------------------------------------------------------------------------
+|
+| Module: {{ module }}
+| Layer: Delivery
+|
+*/
+
+Route::prefix('api/{{ version }}/{{ module_snake_plural }}')
+    ->as('api.{{ version }}.{{ module_snake }}.')
+    ->group(function () {
+        
+        Route::get('/', [{{ controllerClass }}::class, 'index'])->name('index');
+        // Route::post('/', [{{ controllerClass }}::class, 'store'])->name('store');
+        // Route::get('/{id}', [{{ controllerClass }}::class, 'show'])->name('show');
+    });

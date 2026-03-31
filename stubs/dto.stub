@@ -1,0 +1,34 @@
+<?php
+
+namespace {{ namespace }};
+
+readonly class {{ class }}
+{
+    /**
+     * Data Transfer Object for query filters.
+     *
+     * @param  string|null  $status  The status filter (optional).
+     * @param  int  $limit  The maximum number of items to return (default: 10).
+     * @param  string|null  $search  The search keyword (optional).
+     */
+    public function __construct(
+        public ?string $status = null,
+        public int $limit = 10,
+        public ?string $search = null,
+    ) {}
+
+    /**
+     * Create a DTO instance from an array of data.
+     *
+     * @param  array  $data  The input data, usually from a request or other source.
+     * @return self  A new instance of the data transfer object.
+     */
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            $data['status'] ?? null,
+            isset($data['limit']) ? (int) $data['limit'] : 10,
+            $data['search'] ?? null
+        );
+    }
+}

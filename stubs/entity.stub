@@ -1,0 +1,253 @@
+<?php
+
+namespace {{ namespace }};
+
+/**
+ * {{ class }} entity representing a single record.
+ *
+ * @property int|string|null $id The unique identifier of the entity.
+ * @property string|null $name Name of the entity.
+ * @property string|null $status Status of the entity (e.g., pending, active, inactive, deleted).
+ * @property \DateTimeInterface|null $createdAt When the entity was created.
+ * @property \DateTimeInterface|null $updatedAt When the entity was last updated.
+ */
+class {{ class }}
+{
+    /**
+     * Create a new {{ class }} entity.
+     *
+     * @param int|string|null $id
+     * @param string|null $name
+     * @param string|null $status
+     * @param \DateTimeInterface|null $createdAt
+     * @param \DateTimeInterface|null $updatedAt
+     */
+    public function __construct(
+        public int|string|null $id = null,
+        public ?string $name = null,
+        public ?string $status = null,
+        public ?\DateTimeInterface $createdAt = null,
+        public ?\DateTimeInterface $updatedAt = null
+    ) {}
+
+    /**
+     * Get the entity's ID.
+     *
+     * @return int|string|null
+     */
+    public function getId(): int|string|null
+    {
+        return $this->id;
+    }
+
+    /**
+     * Get the entity's name.
+     *
+     * @return string|null
+     */
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    /**
+     * Get the current status of the entity.
+     *
+     * @return string|null
+     */
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    /**
+     * Get the created at datetime.
+     *
+     * @return \DateTimeInterface|null
+     */
+    public function getCreatedAt(): ?\DateTimeInterface
+    {
+        return $this->createdAt;
+    }
+
+    /**
+     * Get the updated at datetime.
+     *
+     * @return \DateTimeInterface|null
+     */
+    public function getUpdatedAt(): ?\DateTimeInterface
+    {
+        return $this->updatedAt;
+    }
+
+    /**
+     * Set the name for the entity.
+     *
+     * @param string|null $name
+     * @return void
+     */
+    public function setName(?string $name): void
+    {
+        if (is_null($name) || trim($name) === '') {
+            throw new \InvalidArgumentException('Name cannot be empty.');
+        }
+        $this->name = $name;
+    }
+
+    /**
+     * Set the entity status.
+     *
+     * @param string|null $status
+     * @return void
+     */
+    public function setStatus(?string $status): void
+    {
+        $this->status = $status;
+    }
+
+    /**
+     * Set the created at datetime.
+     *
+     * @param \DateTimeInterface|null $createdAt
+     * @return void
+     */
+    public function setCreatedAt(?\DateTimeInterface $createdAt): void
+    {
+        $this->createdAt = $createdAt;
+    }
+
+    /**
+     * Set the updated at datetime.
+     *
+     * @param \DateTimeInterface|null $updatedAt
+     * @return void
+     */
+    public function setUpdatedAt(?\DateTimeInterface $updatedAt): void
+    {
+        $this->updatedAt = $updatedAt;
+    }
+
+    /**
+     * Mark the entity as pending.
+     *
+     * @return void
+     */
+    public function markAsPending(): void
+    {
+        if (class_exists('{{ class }}StatusEnum')) {
+            $this->status = {{ class }}StatusEnum::PENDING->value;
+        } else {
+            $this->status = 'pending';
+        }
+    }
+
+    /**
+     * Mark the entity as active.
+     *
+     * @return void
+     */
+    public function markAsActive(): void
+    {
+        if (class_exists('{{ class }}StatusEnum')) {
+            $this->status = {{ class }}StatusEnum::ACTIVE->value;
+        } else {
+            $this->status = 'active';
+        }
+    }
+
+    /**
+     * Mark the entity as inactive.
+     *
+     * @return void
+     */
+    public function markAsInactive(): void
+    {
+        if (class_exists('{{ class }}StatusEnum')) {
+            $this->status = {{ class }}StatusEnum::INACTIVE->value;
+        } else {
+            $this->status = 'inactive';
+        }
+    }
+
+    /**
+     * Mark the entity as deleted.
+     *
+     * @return void
+     */
+    public function markAsDeleted(): void
+    {
+        if (class_exists('{{ class }}StatusEnum')) {
+            $this->status = {{ class }}StatusEnum::DELETED->value;
+        } else {
+            $this->status = 'deleted';
+        }
+    }
+
+    /**
+     * Check if the entity is pending.
+     *
+     * @return bool
+     */
+    public function isPending(): bool
+    {
+        if (class_exists('{{ class }}StatusEnum') && method_exists('{{ class }}StatusEnum', 'fromValue')) {
+            return {{ class }}StatusEnum::fromValue((string)$this->status)?->isPending() ?? false;
+        }
+        return $this->status === 'pending';
+    }
+
+    /**
+     * Check if the entity is active.
+     *
+     * @return bool
+     */
+    public function isActive(): bool
+    {
+        if (class_exists('{{ class }}StatusEnum') && method_exists('{{ class }}StatusEnum', 'fromValue')) {
+            return {{ class }}StatusEnum::fromValue((string)$this->status)?->isActive() ?? false;
+        }
+        return $this->status === 'active';
+    }
+
+    /**
+     * Check if the entity is inactive.
+     *
+     * @return bool
+     */
+    public function isInactive(): bool
+    {
+        if (class_exists('{{ class }}StatusEnum') && method_exists('{{ class }}StatusEnum', 'fromValue')) {
+            return {{ class }}StatusEnum::fromValue((string)$this->status)?->isInactive() ?? false;
+        }
+        return $this->status === 'inactive';
+    }
+
+    /**
+     * Check if the entity is deleted.
+     *
+     * @return bool
+     */
+    public function isDeleted(): bool
+    {
+        if (class_exists('{{ class }}StatusEnum') && method_exists('{{ class }}StatusEnum', 'fromValue')) {
+            return {{ class }}StatusEnum::fromValue((string)$this->status)?->isDeleted() ?? false;
+        }
+        return $this->status === 'deleted';
+    }
+
+    /**
+     * Convert the entity to an associative array.
+     *
+     * @return array
+     */
+    public function toArray(): array
+    {
+        return [
+            'id'         => $this->id,
+            'name'       => $this->name,
+            'status'     => $this->status,
+            'created_at' => $this->createdAt?->format('Y-m-d H:i:s'),
+            'updated_at' => $this->updatedAt?->format('Y-m-d H:i:s'),
+        ];
+    }
+}

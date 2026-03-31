@@ -1,0 +1,93 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\ServiceProvider;
+use Modules\{{ module }}\Domain\Repositories\{{ module }}RepositoryInterface;
+use Modules\{{ module }}\Infrastructure\Repositories\Eloquent{{ module }}Repository;
+
+class {{ class }} extends ServiceProvider
+{
+    /**
+     * Register the application services with the Laravel service container.
+     *
+     * Binds the module repository interface to its Eloquent implementation,
+     * ensuring dependency injection provides the correct concrete class.
+     *
+     * @return void
+     */
+    public function register(): void
+    {
+        $this->app->bind(
+            {{ module }}RepositoryInterface::class,
+            Eloquent{{ module }}Repository::class
+        );
+    }
+
+    /**
+     * Bootstrap any module services.
+     *
+     * Registers the module's routes, views, and migrations
+     * if the directories exist within the module.
+     *
+     * @return void
+     */
+    public function boot(): void
+    {
+        $this->registerRoutes();
+        $this->registerViews();
+        // Uncomment the following line if you want to load module migrations:
+        // $this->registerMigrations();
+    }
+
+    /**
+     * Register the module routes by loading from web and api route files if they exist.
+     *
+     * @return void
+     */
+    protected function registerRoutes(): void
+    {
+        $modulePath = base_path('modules/{{ module }}/Delivery/Routes');
+
+        if (file_exists($modulePath . '/web.php')) {
+            Route::middleware('web')->group($modulePath . '/web.php');
+        }
+
+        if (file_exists($modulePath . '/api.php')) {
+            Route::prefix('api/{{ module_snake }}')
+                ->middleware('api')
+                ->group($modulePath . '/api.php');
+        }
+    }
+
+    /**
+     * Register the module views for loading with a namespaced alias.
+     *
+     * This allows views to be referenced with the '{{ module_snake }}::' namespace.
+     *
+     * @return void
+     */
+    protected function registerViews(): void
+    {
+        $viewPath = __DIR__ . '/../../Delivery/Views';
+
+        if (is_dir($viewPath)) {
+            $this->loadViewsFrom($viewPath, '{{ module_snake }}');
+        }
+    }
+
+    /**
+     * Register the module migrations if the migration directory exists.
+     *
+     * @return void
+     */
+    protected function registerMigrations(): void
+    {
+        $migrationPath = base_path('modules/{{ module }}/Infrastructure/Database/Migrations');
+
+        if (is_dir($migrationPath)) {
+            $this->loadMigrationsFrom($migrationPath);
+        }
+    }
+}

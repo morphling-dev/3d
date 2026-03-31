@@ -1,0 +1,44 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+
+class {{ class }}
+{
+    protected string $baseUrl;
+    protected string $apiKey;
+
+    public function __construct()
+    {
+        $this->baseUrl = config('services.{{ module_snake }}.base_url');
+        $this->apiKey = config('services.{{ module_snake }}.api_key');
+    }
+
+    /**
+     * Contoh method untuk memanggil API External.
+     */
+    public function fetchData(array $params = []): array
+    {
+        try {
+            $response = Http::withToken($this->apiKey)
+                ->timeout(10)
+                ->get($this->baseUrl . '/endpoint', $params);
+
+            if ($response->failed()) {
+                Log::error("{{ class }} request failed", [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                return [];
+            }
+
+            return $response->json();
+            
+        } catch (\Exception $e) {
+            Log::error("{{ class }} exception: " . $e->getMessage());
+            return [];
+        }
+    }
+}
